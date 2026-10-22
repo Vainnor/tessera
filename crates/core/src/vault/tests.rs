@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -71,7 +71,7 @@ fn note_paths(listing: &NoteListing) -> Vec<&str> {
 }
 
 #[cfg(unix)]
-fn symlink(target: &Path, link: &Path) {
+fn symlink(target: &std::path::Path, link: &std::path::Path) {
     std::os::unix::fs::symlink(target, link).unwrap();
 }
 
