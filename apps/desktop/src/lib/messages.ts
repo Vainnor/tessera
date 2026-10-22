@@ -1,4 +1,22 @@
-import type { SkipReason, SkippedEntry } from "./types.ts";
+import type { CommandError, SkipReason, SkippedEntry } from "./types.ts";
+
+/** Whether `error` is a rejection from one of Tessera's own commands. */
+export function isCommandError(error: unknown): error is CommandError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    "message" in error &&
+    typeof error.message === "string"
+  );
+}
+
+/** A rename target with `.md` added when the user left it off. Rust still validates it. */
+export function withMarkdownExtension(path: string): string {
+  const trimmed = path.trim();
+  return /\.md$/i.test(trimmed) ? trimmed : `${trimmed}.md`;
+}
 
 /** The text to show for a rejected command, or a generic line for anything unexpected. */
 export function errorMessage(error: unknown): string {

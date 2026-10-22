@@ -52,8 +52,13 @@
 
 .shell__vault {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   min-height: 0;
+}
+
+.shell__error,
+.shell__notice {
+  padding-inline: var(--t-space-4);
 }
 
 /* The open vault: note list beside the selected note. */
@@ -136,4 +141,28 @@
   line-height: var(--t-leading-relaxed);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.vault__note-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--t-space-3);
+}
+
+.vault__note-actions,
+.vault__rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--t-space-2);
+}
+
+.vault__rename {
+  margin-block: var(--t-space-3);
+}
+
+.vault__rename .t-input {
+  flex: 1 1 20rem;
 }

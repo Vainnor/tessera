@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { errorMessage, skippedSummary } from "./messages.ts";
+import { errorMessage, isCommandError, skippedSummary, withMarkdownExtension } from "./messages.ts";
 
 describe("errorMessage", () => {
   it("shows a command error's message", () => {
@@ -36,5 +36,27 @@ describe("skippedSummary", () => {
     expect(skippedSummary([{ path: "x", reason: "unreadable" }])).toBe(
       "1 item not shown: 1 unreadable folder.",
     );
+  });
+});
+
+describe("isCommandError", () => {
+  it("recognizes a command rejection", () => {
+    expect(isCommandError({ code: "conflict", message: "changed" })).toBe(true);
+  });
+
+  it("rejects anything without both fields", () => {
+    expect(isCommandError(new Error("x"))).toBe(false);
+    expect(isCommandError({ code: 1, message: "x" })).toBe(false);
+    expect(isCommandError("conflict")).toBe(false);
+  });
+});
+
+describe("withMarkdownExtension", () => {
+  it("adds .md when it is missing", () => {
+    expect(withMarkdownExtension("Projects/plan")).toBe("Projects/plan.md");
+  });
+
+  it("keeps an existing extension in any case and trims spaces", () => {
+    expect(withMarkdownExtension(" notes/A.MD ")).toBe("notes/A.MD");
   });
 });

@@ -6,8 +6,11 @@ fn main() {
         tauri_build::Attributes::new().app_manifest(tauri_build::AppManifest::new().commands(&[
             "app_info",
             "open_vault",
+            "restore_vault",
             "list_notes",
             "read_note",
+            "move_note",
+            "trash_note",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         #[allow(

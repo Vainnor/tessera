@@ -9,7 +9,7 @@ use tessera_core::vault::{Note, NoteListing, Revision, SkipReason};
 /// errors never hold a path, so neither does this.
 #[derive(Debug, PartialEq, Eq, Serialize)]
 pub(crate) struct CommandError {
-    code: &'static str,
+    pub(crate) code: &'static str,
     message: String,
 }
 
@@ -52,6 +52,25 @@ pub(crate) fn revision_token(revision: Revision) -> String {
         Some(ns) => format!("{}:{ns}", revision.size_bytes),
         None => format!("{}:-", revision.size_bytes),
     }
+}
+
+/// Parses a token made by [`revision_token`]. The webview hands it back, so it is checked like any
+/// other untrusted argument.
+pub(crate) fn parse_revision_token(token: &str) -> Result<Revision, CommandError> {
+    let invalid = || CommandError::new("invalid-revision", "the note's revision is not valid");
+    if token.len() > 64 {
+        return Err(invalid());
+    }
+    let (size, modified) = token.split_once(':').ok_or_else(invalid)?;
+    let size_bytes = size.parse::<u64>().map_err(|_| invalid())?;
+    let modified_ns = match modified {
+        "-" => None,
+        digits => Some(digits.parse::<u64>().map_err(|_| invalid())?),
+    };
+    Ok(Revision {
+        size_bytes,
+        modified_ns,
+    })
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
@@ -119,6 +138,16 @@ impl From<NoteListing> for ListingDto {
 pub(crate) struct OpenedVaultDto {
     pub(crate) name: String,
     pub(crate) listing: ListingDto,
+    /// Whether the vault was saved to reopen at the next launch.
+    pub(crate) remembered: bool,
+}
+
+/// A note after a rename or move: where it is now and its revision there.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct MovedNoteDto {
+    pub(crate) path: String,
+    pub(crate) revision: String,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
@@ -159,6 +188,45 @@ mod tests {
             modified_ns: None,
         };
         assert_eq!(revision_token(revision), "3:-");
+    }
+
+    #[test]
+    fn revision_tokens_round_trip() {
+        for revision in [
+            Revision {
+                size_bytes: 12,
+                modified_ns: Some(1_792_000_000_123_456_789),
+            },
+            Revision {
+                size_bytes: 0,
+                modified_ns: None,
+            },
+        ] {
+            assert_eq!(
+                parse_revision_token(&revision_token(revision)),
+                Ok(revision)
+            );
+        }
+    }
+
+    #[test]
+    fn revision_tokens_from_the_webview_are_validated() {
+        for bad in [
+            "",
+            "12",
+            "12:",
+            ":5",
+            "-1:5",
+            "12:abc",
+            "12:5:6",
+            &"9".repeat(65),
+        ] {
+            assert_eq!(
+                parse_revision_token(bad).unwrap_err().code,
+                "invalid-revision",
+                "{bad:?}"
+            );
+        }
     }
 
     #[test]

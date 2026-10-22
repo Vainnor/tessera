@@ -5,6 +5,7 @@
 
 mod commands;
 mod dto;
+mod settings;
 
 /// Builds and runs the app until the last window closes.
 pub fn run() {
@@ -16,8 +17,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::app_info,
             commands::open_vault,
+            commands::restore_vault,
             commands::list_notes,
             commands::read_note,
+            commands::move_note,
+            commands::trash_note,
         ])
         .run(tauri::generate_context!());
     if let Err(error) = result {

@@ -38,6 +38,13 @@ export interface OpenedVault {
   /** The folder's name only; the full path stays in Rust. */
   name: string;
   listing: NoteListing;
+  /** Whether the vault was saved to reopen at the next launch. */
+  remembered: boolean;
+}
+
+export interface MovedNote {
+  path: string;
+  revision: string;
 }
 
 export interface Note {

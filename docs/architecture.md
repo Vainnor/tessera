@@ -85,10 +85,12 @@ tessera/
 
 Not built yet: attachments and file watching.
 
-The desktop app opens a vault with the native folder picker and can list and read notes
-(`open_vault`, `list_notes`, `read_note` in `apps/desktop/src-tauri/src/commands.rs`). It shows a
-note's markdown source; the editor and the write commands come next. The chosen vault is not
-remembered between launches yet.
+The desktop app opens a vault with the native folder picker, reopens the last vault at launch
+(its path is kept in `settings.json` in the app's config folder and never sent to the webview),
+lists and reads notes, and renames, moves and trashes them (`apps/desktop/src-tauri/src/commands.rs`).
+The note list and the open note refresh when the window regains focus, so changes made in other
+apps show up without a file watcher or any idle work. It shows a note's markdown source; the editor
+and the write command come next.
 
 ## Sync (planned)
 

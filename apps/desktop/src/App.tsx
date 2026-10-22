@@ -2,8 +2,8 @@ import { PRESETS, applyTheme, type ThemeChoice } from "@vainnor/tessera-theme";
 import { Button, Wordmark } from "@vainnor/tessera-ui";
 import { useEffect, useId, useState } from "react";
 
-import { appInfo, openVault } from "./lib/ipc.ts";
-import { errorMessage } from "./lib/messages.ts";
+import { appInfo, openVault, restoreVault } from "./lib/ipc.ts";
+import { errorMessage, isCommandError } from "./lib/messages.ts";
 import { saveChoice, type ChoiceStorage } from "./lib/theme-choice.ts";
 import type { AppInfo, OpenedVault } from "./lib/types.ts";
 import { VaultView } from "./VaultView.tsx";
@@ -18,6 +18,7 @@ export function App({ initialChoice, storage }: AppProps) {
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [vault, setVault] = useState<OpenedVault | null>(null);
   const [openError, setOpenError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const themeSelectId = useId();
 
   useEffect(() => {
@@ -33,12 +34,32 @@ export function App({ initialChoice, storage }: AppProps) {
     };
   }, []);
 
+  useEffect(() => {
+    let live = true;
+    restoreVault()
+      .then((restored) => {
+        if (live && restored) setVault(restored);
+      })
+      .catch((error: unknown) => {
+        // Outside the Tauri window there is no IPC and nothing to restore.
+        if (live && isCommandError(error)) setOpenError(error.message);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+
   function pickVault() {
     setOpenError(null);
+    setNotice(null);
     openVault()
       .then((opened) => {
         // `null` means the user cancelled the picker; keep whatever was open.
-        if (opened) setVault(opened);
+        if (!opened) return;
+        setVault(opened);
+        if (!opened.remembered) {
+          setNotice("Tessera could not save this vault to reopen next time.");
+        }
       })
       .catch((error: unknown) => {
         setOpenError(errorMessage(error));
@@ -80,6 +101,11 @@ export function App({ initialChoice, storage }: AppProps) {
           {openError ? (
             <p className="shell__error" role="status">
               {openError}
+            </p>
+          ) : null}
+          {notice ? (
+            <p className="shell__notice t-muted" role="status">
+              {notice}
             </p>
           ) : null}
           <VaultView vault={vault} onListingChange={setVault} />

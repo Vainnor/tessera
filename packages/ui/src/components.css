@@ -100,6 +100,16 @@
   color: var(--t-color-text);
 }
 
+.t-input {
+  min-height: 2.75rem;
+  padding: var(--t-space-1) var(--t-space-3);
+  border: 1px solid var(--t-color-border-strong);
+  border-radius: var(--t-radius-md);
+  background: var(--t-color-surface);
+  color: var(--t-color-text);
+  font: inherit;
+}
+
 .t-muted {
   color: var(--t-color-text-muted);
 }

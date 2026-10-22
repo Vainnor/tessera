@@ -1,8 +1,13 @@
 import { Button } from "@vainnor/tessera-ui";
-import { useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
-import { listNotes, readNote } from "./lib/ipc.ts";
-import { errorMessage, skippedSummary } from "./lib/messages.ts";
+import { listNotes, moveNote, readNote, trashNote } from "./lib/ipc.ts";
+import {
+  errorMessage,
+  isCommandError,
+  skippedSummary,
+  withMarkdownExtension,
+} from "./lib/messages.ts";
 import type { Note, OpenedVault } from "./lib/types.ts";
 
 interface VaultViewProps {
@@ -10,32 +15,131 @@ interface VaultViewProps {
   onListingChange: (vault: OpenedVault) => void;
 }
 
-/** The open vault: the note list and the selected note's source. Read-only for now. */
+/** The open vault: the note list and the selected note's source, with rename and trash. */
 export function VaultView({ vault, onListingChange }: VaultViewProps) {
   const [note, setNote] = useState<Note | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [draft, setDraft] = useState("");
+  const renameInputId = useId();
+  const renameButton = useRef<HTMLButtonElement>(null);
   // Only the most recent read may update the view, however fast the user clicks.
   const latestRead = useRef(0);
   const { listing } = vault;
   const skipped = skippedSummary(listing.skipped);
 
-  function open(path: string) {
+  function reloadNote(path: string): Promise<void> {
     const request = ++latestRead.current;
-    setStatus(null);
-    readNote(path)
-      .then((result) => {
+    return readNote(path).then(
+      (result) => {
         if (request === latestRead.current) setNote(result);
+      },
+      (error: unknown) => {
+        if (request !== latestRead.current) return;
+        if (isCommandError(error) && error.code === "note-not-found") {
+          setNote(null);
+          setStatus("That note was moved or deleted outside Tessera.");
+          return;
+        }
+        throw error;
+      },
+    );
+  }
+
+  // The focus handler outlives renders, so it reads the latest props and state from a ref that
+  // is updated after every render.
+  const latest = useRef({ vault, note, onListingChange, reloadNote });
+  useEffect(() => {
+    latest.current = { vault, note, onListingChange, reloadNote };
+  });
+
+  // Another app may have changed the vault while Tessera was in the background. Refreshing when
+  // the window regains focus catches that without any work while idle.
+  useEffect(() => {
+    let refreshing = false;
+    function onFocus() {
+      if (refreshing) return;
+      refreshing = true;
+      const {
+        vault: shown,
+        note: open,
+        onListingChange: update,
+        reloadNote: reload,
+      } = latest.current;
+      const reread = open ? reload(open.path) : Promise.resolve();
+      Promise.all([listNotes().then((next) => update({ ...shown, listing: next })), reread])
+        .catch((error: unknown) => {
+          setStatus(errorMessage(error));
+        })
+        .finally(() => {
+          refreshing = false;
+        });
+    }
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
+  function open(path: string) {
+    setStatus(null);
+    setRenaming(false);
+    reloadNote(path).catch((error: unknown) => {
+      setStatus(errorMessage(error));
+    });
+  }
+
+  function refresh(): Promise<void> {
+    return listNotes().then((next) => {
+      onListingChange({ ...vault, listing: next });
+    });
+  }
+
+  function startRename() {
+    if (!note) return;
+    setDraft(note.path);
+    setRenaming(true);
+  }
+
+  function stopRename() {
+    setRenaming(false);
+    // Return focus to the control that opened the form (.claude/rules/accessibility.md).
+    requestAnimationFrame(() => renameButton.current?.focus());
+  }
+
+  function submitRename(event: FormEvent) {
+    event.preventDefault();
+    if (!note) return;
+    const target = withMarkdownExtension(draft);
+    setStatus(null);
+    moveNote(note.path, target, note.revision)
+      .then((moved) => {
+        setNote({ ...note, path: moved.path, revision: moved.revision });
+        stopRename();
+        setStatus(`Renamed to ${moved.path}.`);
+        return refresh();
       })
       .catch((error: unknown) => {
-        if (request === latestRead.current) setStatus(errorMessage(error));
+        setStatus(errorMessage(error));
       });
   }
 
-  function refresh() {
+  function cancelOnEscape(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      stopRename();
+    }
+  }
+
+  function trash() {
+    if (!note) return;
     setStatus(null);
-    listNotes()
-      .then((next) => {
-        onListingChange({ ...vault, listing: next });
+    trashNote(note.path, note.revision)
+      .then((trashedTo) => {
+        latestRead.current++;
+        setNote(null);
+        setStatus(`Moved to ${trashedTo}. Move it back out of .trash to restore it.`);
+        return refresh();
       })
       .catch((error: unknown) => {
         setStatus(errorMessage(error));
@@ -47,7 +151,16 @@ export function VaultView({ vault, onListingChange }: VaultViewProps) {
       <nav className="vault__list" aria-label="Notes">
         <div className="vault__heading">
           <h2>{vault.name}</h2>
-          <Button onClick={refresh}>Refresh</Button>
+          <Button
+            onClick={() => {
+              setStatus(null);
+              refresh().catch((error: unknown) => {
+                setStatus(errorMessage(error));
+              });
+            }}
+          >
+            Refresh
+          </Button>
         </div>
         {listing.notes.length === 0 ? (
           <p className="t-muted">This folder has no markdown notes.</p>
@@ -82,7 +195,38 @@ export function VaultView({ vault, onListingChange }: VaultViewProps) {
         </p>
         {note ? (
           <>
-            <h1 className="vault__title">{note.path}</h1>
+            <div className="vault__note-bar">
+              <h1 className="vault__title">{note.path}</h1>
+              {renaming ? null : (
+                <div className="vault__note-actions">
+                  <Button ref={renameButton} onClick={startRename}>
+                    Rename
+                  </Button>
+                  <Button onClick={trash}>Move to trash</Button>
+                </div>
+              )}
+            </div>
+            {renaming ? (
+              <form className="vault__rename" onSubmit={submitRename}>
+                <label htmlFor={renameInputId}>New name or path</label>
+                <input
+                  id={renameInputId}
+                  className="t-input"
+                  value={draft}
+                  // The user just asked for this field, so focus moves into it.
+                  autoFocus
+                  spellCheck={false}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                  }}
+                  onKeyDown={cancelOnEscape}
+                />
+                <Button variant="primary" type="submit">
+                  Rename
+                </Button>
+                <Button onClick={stopRename}>Cancel</Button>
+              </form>
+            ) : null}
             <p className="t-muted">Showing the markdown source. Editing is not built yet.</p>
             <pre className="vault__source">{note.markdown}</pre>
           </>
