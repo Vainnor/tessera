@@ -1,0 +1,45 @@
+---
+import Base from "../layouts/Base.astro";
+import { FEATURES, RELEASES_URL, REPO_URL, STATUS_LABEL } from "../data/site.ts";
+---
+
+<Base
+  title="Tessera"
+  description="Tessera is an open-source, local-first notes app that keeps your notes as plain markdown files. In early development."
+>
+  <section class="hero" aria-labelledby="hero-title">
+    <h1 id="hero-title" class="hero__title">Notes that stay yours.</h1>
+    <p class="hero__lead">
+      Tessera is a notes app that keeps your notes as plain markdown files on your own devices.
+      Sync between them will be end-to-end encrypted, through a server you can host yourself.
+    </p>
+    <p>
+      <strong>Tessera is in early development.</strong> There is no release yet, and most of what is
+      listed below is planned rather than built.
+    </p>
+    <div class="hero__actions">
+      <a class="t-button t-button--primary" href={RELEASES_URL}>Download</a>
+      <a class="t-button" href={REPO_URL}>Source on GitHub</a>
+      <span class="t-muted">No releases yet. Builds will appear on GitHub Releases.</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="features-title">
+    <h2 id="features-title" class="section-title">What Tessera is for</h2>
+    <ul class="features">
+      {
+        FEATURES.map((feature) => (
+          <li class="t-card feature">
+            <h3>
+              {feature.title}
+              <span class:list={["t-badge", { "t-badge--available": feature.status === "available" }]}>
+                {STATUS_LABEL[feature.status]}
+              </span>
+            </h3>
+            <p class="t-muted">{feature.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

@@ -1,0 +1,135 @@
+/* Website layout. Tokens only (.claude/rules/theming.md). */
+
+.site-container {
+  width: min(100% - 2 * var(--t-space-4), 64rem);
+  margin-inline: auto;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--t-color-border);
+  background: var(--t-color-surface);
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--t-space-3);
+  padding-block: var(--t-space-3);
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--t-space-1) var(--t-space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  display: inline-block;
+  padding-block: var(--t-space-1);
+  color: var(--t-color-text);
+}
+
+.site-nav a[aria-current="page"] {
+  color: var(--t-color-accent);
+  text-decoration-thickness: 2px;
+}
+
+.site-main {
+  padding-block: var(--t-space-7);
+}
+
+.site-footer {
+  border-top: 1px solid var(--t-color-border);
+  font-size: var(--t-text-sm);
+}
+
+.site-footer__inner {
+  display: grid;
+  gap: var(--t-space-2);
+  padding-block: var(--t-space-5);
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--t-space-2);
+}
+
+.theme-picker[hidden] {
+  display: none;
+}
+
+.hero {
+  display: grid;
+  gap: var(--t-space-4);
+  max-width: 44rem;
+  padding-block-end: var(--t-space-7);
+}
+
+.hero__title {
+  font-size: calc(var(--t-text-2xl) * 1.25);
+}
+
+.hero__lead {
+  font-size: var(--t-text-md);
+  color: var(--t-color-text-muted);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--t-space-3);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: var(--t-space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.feature h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--t-space-2);
+  margin-block-end: var(--t-space-2);
+}
+
+.prose {
+  display: grid;
+  gap: var(--t-space-4);
+  max-width: 44rem;
+}
+
+.prose h2 {
+  margin-block-start: var(--t-space-4);
+}
+
+.prose ul,
+.prose ol {
+  display: grid;
+  gap: var(--t-space-2);
+  padding-inline-start: var(--t-space-5);
+}
+
+.notice {
+  padding: var(--t-space-3) var(--t-space-4);
+  border: 1px solid var(--t-color-warning);
+  border-radius: var(--t-radius-md);
+  background: var(--t-color-surface);
+}
+
+.notice strong {
+  color: var(--t-color-warning);
+}
+
+.section-title {
+  margin-block-end: var(--t-space-4);
+}

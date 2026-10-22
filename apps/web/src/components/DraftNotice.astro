@@ -1,0 +1,14 @@
+---
+interface Props {
+  updated: string;
+}
+const { updated } = Astro.props;
+---
+
+<aside class="notice" aria-label="Draft notice">
+  <p>
+    <strong>Draft.</strong> This page has not had legal review and is not legal advice. It describes
+    the project as it is today and will change before Tessera has a release or a hosted service.
+    Last updated <time datetime={updated}>{updated}</time>.
+  </p>
+</aside>

@@ -1,0 +1,27 @@
+{
+  "name": "@vainnor/tessera-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro check && astro build && node scripts/check-dist.ts",
+    "preview": "astro preview --host 127.0.0.1",
+    "typecheck": "astro check",
+    "test": "vitest run",
+    "lighthouse": "lhci autorun"
+  },
+  "dependencies": {
+    "@vainnor/tessera-theme": "workspace:*",
+    "@vainnor/tessera-ui": "workspace:*",
+    "astro": "^7.4.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@lhci/cli": "^0.15.1",
+    "@types/node": "^24.19.2",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro";
+import { REPO_URL } from "../data/site.ts";
+---
+
+<Base title="License" description="Tessera is licensed under the GNU AGPL v3 or later. A plain-language summary.">
+  <article class="prose">
+    <h1>License</h1>
+    <p>
+      Tessera is licensed under the <strong>GNU Affero General Public License, version 3 or any later
+      version</strong> (AGPL-3.0-or-later). The license text is the authority; this summary only helps you
+      read it and is not legal advice.
+    </p>
+
+    <h2>What you can do</h2>
+    <ul>
+      <li>Use Tessera for any purpose, personal or commercial.</li>
+      <li>Read and study the source code, and change it.</li>
+      <li>Share copies, changed or unchanged, and charge for them if you like.</li>
+    </ul>
+
+    <h2>What you must do when you share it</h2>
+    <ul>
+      <li>Keep it under the same license, and pass on the license text and copyright notices.</li>
+      <li>Give the people you share it with the complete source code of the version you shared.</li>
+      <li>Mark what you changed.</li>
+    </ul>
+
+    <h2>The network clause</h2>
+    <p>
+      The Affero part is section 13. If you run a modified Tessera sync server that other people use over a
+      network, you must offer those people the source code of your modified version. Running an unmodified
+      server, or using the app yourself, does not add any obligation.
+    </p>
+
+    <h2>No warranty</h2>
+    <p>Tessera is provided without warranty of any kind (sections 15 and 16).</p>
+
+    <h2>Full text</h2>
+    <ul>
+      <li><a href="/license.txt">The full license text</a>, served by this site.</li>
+      <li><a href={`${REPO_URL}/blob/main/LICENSE`}>LICENSE in the repository</a>.</li>
+      <li><a href="https://www.gnu.org/licenses/agpl-3.0.html">The GNU AGPL on gnu.org</a>, with the FSF's guidance.</li>
+    </ul>
+  </article>
+</Base>

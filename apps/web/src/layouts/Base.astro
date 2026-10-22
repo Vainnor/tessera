@@ -1,0 +1,91 @@
+---
+import "@vainnor/tessera-theme/tessera.css";
+import "@vainnor/tessera-ui/base.css";
+import "@vainnor/tessera-ui/components.css";
+import "../styles/site.css";
+
+import { PRESETS } from "@vainnor/tessera-theme";
+import { REPO_URL } from "../data/site.ts";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const fullTitle = title === "Tessera" ? "Tessera: local-first markdown notes" : `${title} · Tessera`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const themeIds = PRESETS.map((theme) => theme.id).join(" ");
+// Mirrors public/_headers. frame-ancestors only works as a header, so it is not repeated here.
+const csp =
+  "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; " +
+  "manifest-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'";
+const nav = [
+  { href: "/docs/", label: "Docs" },
+  { href: "/privacy/", label: "Privacy" },
+  { href: "/license/", label: "License" },
+];
+const current = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {import.meta.env.PROD && <meta http-equiv="Content-Security-Policy" content={csp} />}
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="tessera-themes" content={themeIds} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script src="/theme.js" is:inline></script>
+  </head>
+  <body>
+    <a class="t-skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="site-container site-header__inner">
+        <a class="t-wordmark" href="/" aria-label="Tessera home">
+          <span class="t-wordmark__mark" aria-hidden="true">^v<span class="t-wordmark__cursor">█</span></span>
+          <span class="t-wordmark__name" aria-hidden="true">tessera</span>
+        </a>
+        <nav aria-label="Main">
+          <ul class="site-nav">
+            {
+              nav.map((item) => (
+                <li>
+                  <a href={item.href} aria-current={current.startsWith(item.href) ? "page" : undefined}>
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+            <li><a href={REPO_URL}>GitHub</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="site-container site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-container site-footer__inner">
+        <p class="t-muted">
+          Tessera is a <a href="https://vainnor.com">Vainnor</a> project, licensed under the
+          <a href="/license/">GNU AGPL v3 or later</a>. This site uses no cookies, analytics or
+          third-party requests.
+        </p>
+        <p class="t-muted"><a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a></p>
+        <div class="theme-picker" data-theme-picker-wrap hidden>
+          <label for="theme-picker">Theme</label>
+          <select id="theme-picker" class="t-select" data-theme-picker>
+            <option value="auto">Follow system</option>
+            {PRESETS.map((theme) => <option value={theme.id}>{theme.name}</option>)}
+          </select>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

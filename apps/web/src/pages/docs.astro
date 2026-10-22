@@ -1,0 +1,45 @@
+---
+import Base from "../layouts/Base.astro";
+import { DOCS_URL, REPO_URL } from "../data/site.ts";
+
+const docs = [
+  { file: "architecture.md", title: "Architecture", what: "How the pieces fit: the Rust core, the apps, the sync server." },
+  { file: "threat-model.md", title: "Threat model", what: "Who Tessera defends against, and the end-to-end encryption design." },
+  { file: "design-principles.md", title: "Design principles", what: "Clarity, density, keyboard-first, accessibility." },
+  { file: "theming.md", title: "Theming", what: "The theme format, the tokens and how to write your own theme." },
+  { file: "performance.md", title: "Performance budgets", what: "Memory, startup and size limits, and how they are measured." },
+  { file: "adr/", title: "Decision records", what: "Why the big choices were made." },
+];
+const roadmap = [
+  { step: "Core vault", what: "Read and write a folder of markdown files; watch for changes; parse links and frontmatter." },
+  { step: "Encrypted sync proof of concept", what: "Merge edits between two devices with a CRDT, through the server, encrypted end to end." },
+  { step: "Editor", what: "A fast markdown editor in the desktop app on top of the core." },
+  { step: "Later", what: "Search, sharing with a few people, drawing and handwriting, PDF annotation, a native iPad app, mobile." },
+];
+---
+
+<Base title="Docs and roadmap" description="Tessera's design documents and what gets built next.">
+  <article class="prose">
+    <h1>Docs and roadmap</h1>
+    <p>
+      There are no user docs yet, because there is nothing to use yet. The design documents are written for
+      contributors and live in the repository.
+    </p>
+
+    <h2>Design documents</h2>
+    <ul>
+      {docs.map((doc) => (
+        <li><a href={`${DOCS_URL}/${doc.file}`}>{doc.title}</a>: {doc.what}</li>
+      ))}
+    </ul>
+
+    <h2>Roadmap</h2>
+    <p>Everything here is <span class="t-badge">planned</span>, in this order.</p>
+    <ol>
+      {roadmap.map((item) => (
+        <li><strong>{item.step}.</strong> {item.what}</li>
+      ))}
+    </ol>
+    <p>Progress happens in the open on <a href={REPO_URL}>GitHub</a>.</p>
+  </article>
+</Base>
