@@ -3,8 +3,8 @@
 //! what is listed in [`Settings`]. The file is read like any untrusted input: size first, then
 //! parse with unknown fields refused.
 
-use std::fs;
-use std::io::ErrorKind;
+use std::fs::{self, File};
+use std::io::{ErrorKind, Read};
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -29,18 +29,29 @@ pub(crate) enum SettingsError {
     Io(ErrorKind),
 }
 
-/// Reads the settings in `dir`. A missing file is the default settings, not an error.
+/// Reads the settings in `dir`. A missing file is the default settings, not an error. The file
+/// is opened once and must be a regular file, and at most [`MAX_BYTES`] are read from it, so a
+/// replaced file (a link to a device, a pipe, one that grows) cannot block or exhaust memory.
 pub(crate) fn load(dir: &Path) -> Result<Settings, SettingsError> {
-    let file = dir.join(FILE_NAME);
-    let metadata = match fs::metadata(&file) {
-        Ok(metadata) => metadata,
+    let file = match File::open(dir.join(FILE_NAME)) {
+        Ok(file) => file,
         Err(e) if e.kind() == ErrorKind::NotFound => return Ok(Settings::default()),
         Err(e) => return Err(SettingsError::Io(e.kind())),
     };
+    let metadata = file.metadata().map_err(|e| SettingsError::Io(e.kind()))?;
+    if !metadata.is_file() {
+        return Err(SettingsError::Malformed);
+    }
     if metadata.len() > MAX_BYTES {
         return Err(SettingsError::TooLarge);
     }
-    let bytes = fs::read(&file).map_err(|e| SettingsError::Io(e.kind()))?;
+    let mut bytes = Vec::new();
+    file.take(MAX_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| SettingsError::Io(e.kind()))?;
+    if bytes.len() as u64 > MAX_BYTES {
+        return Err(SettingsError::TooLarge);
+    }
     serde_json::from_slice(&bytes).map_err(|_| SettingsError::Malformed)
 }
 
@@ -106,6 +117,21 @@ mod tests {
         let nested = dir.0.join("not-yet");
         save(&nested, &Settings::default()).unwrap();
         assert_eq!(load(&nested), Ok(Settings::default()));
+    }
+
+    #[test]
+    fn refuses_a_folder_in_place_of_the_file() {
+        let dir = TempDir::new();
+        fs::create_dir(dir.0.join(FILE_NAME)).unwrap();
+        assert!(load(&dir.0).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_a_link_to_a_device_without_reading_it() {
+        let dir = TempDir::new();
+        std::os::unix::fs::symlink("/dev/zero", dir.0.join(FILE_NAME)).unwrap();
+        assert_eq!(load(&dir.0), Err(SettingsError::Malformed));
     }
 
     #[test]

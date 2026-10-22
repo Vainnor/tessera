@@ -107,6 +107,11 @@ pub(crate) async fn restore_vault(
         let Some(root) = saved.last_vault else {
             return Ok(None);
         };
+        // The picker always yields an absolute path; anything else did not come from Tessera.
+        if !Path::new(&root).is_absolute() {
+            remember(&app, None);
+            return Ok(None);
+        }
         match open_at(Path::new(&root)) {
             Ok(opened) => Ok(Some(opened)),
             Err(error) if error.code == "vault-unavailable" => {
