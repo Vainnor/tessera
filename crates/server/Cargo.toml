@@ -1,0 +1,29 @@
+[package]
+name = "tessera-server"
+description = "Tessera's self-hostable sync server: a relay and backup that only ever stores ciphertext."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+tessera-core.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+toml.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+http-body-util = "0.1"
+tower = { version = "0.5", default-features = false, features = ["util"] }
+
+[lints]
+workspace = true

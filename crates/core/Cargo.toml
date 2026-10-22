@@ -1,0 +1,16 @@
+[package]
+name = "tessera-core"
+description = "Tessera's shared core: vault, document model and sync abstractions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,10 @@
+# Example config for tessera-server. Every key is optional; these are the defaults.
+# Run: tessera-server --config tessera-server.example.toml
+
+# Loopback by default. To reach it from other machines, put a TLS-terminating reverse proxy in
+# front rather than binding 0.0.0.0 directly.
+bind = "127.0.0.1:8787"
+
+[log]
+format = "json"   # or "pretty"
+filter = "info"   # RUST_LOG overrides this

@@ -1,0 +1,55 @@
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/server"]
+# The desktop crate embeds apps/desktop/dist at compile time, so a bare `cargo build` skips it
+# until the frontend is built. `cargo build --workspace` includes it.
+default-members = ["crates/core", "crates/server"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98"
+authors = ["Vainnor"]
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/Vainnor/tessera"
+homepage = "https://tessera.vainnor.com"
+publish = false
+
+[workspace.dependencies]
+tessera-core = { path = "crates/core" }
+anyhow = "1.0.104"
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio", "tracing"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54", features = ["macros", "net", "rt-multi-thread", "signal"] }
+toml = { version = "1.1.8", default-features = false, features = ["parse", "serde", "std"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["ansi", "env-filter", "fmt", "json", "std"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+print_stdout = "warn"
+print_stderr = "warn"
+module_name_repetitions = "allow"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
