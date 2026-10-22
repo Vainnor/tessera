@@ -334,17 +334,65 @@ impl Vault {
     ) -> Result<Revision, Error> {
         let full = self.resolve_note(path)?;
         check_size(markdown)?;
-        let current = fs::symlink_metadata(&full).map_err(|e| match e.kind() {
-            ErrorKind::NotFound => Error::NoteNotFound,
-            _ => Error::io("check the note", &e),
-        })?;
-        if !current.is_file() {
-            return Err(Error::NoteNotFound);
-        }
-        if Revision::of(&current) != expected {
-            return Err(Error::Conflict);
-        }
+        check_unchanged(&full, expected)?;
         durable::replace(&full, markdown.as_bytes())
+    }
+
+    /// Renames or moves the note at `from` to `to`, creating missing folders. Never replaces
+    /// anything already at `to`, and refuses if the note changed on disk since `expected`.
+    /// A rename that only changes letter case works on case-insensitive filesystems too.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::NoteExists`] when something is already at `to`, [`Error::Conflict`],
+    /// [`Error::NoteNotFound`], [`Error::NotANote`] or [`Error::SymlinkRefused`] for either
+    /// path, or [`Error::Io`].
+    pub fn move_note(
+        &self,
+        from: &VaultPath,
+        to: &VaultPath,
+        expected: Revision,
+    ) -> Result<Revision, Error> {
+        let source = self.resolve_note(from)?;
+        let target = self.resolve_note(to)?;
+        check_unchanged(&source, expected)?;
+        if from == to {
+            return Ok(expected);
+        }
+        self.create_parent_folders(to)?;
+        durable::move_no_replace(&source, &target)?;
+        let metadata =
+            fs::symlink_metadata(&target).map_err(|e| Error::io("check the note", &e))?;
+        Ok(Revision::of(&metadata))
+    }
+
+    /// Moves the note at `path` into the vault's `.trash` folder, keeping its folder structure so
+    /// it can be put back, as Obsidian does. A name already in the trash gets a number:
+    /// `.trash/notes/plan (2).md`. Refuses if the note changed on disk since `expected`.
+    ///
+    /// Returns where the note now is.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Conflict`], [`Error::NoteNotFound`], [`Error::NotANote`],
+    /// [`Error::SymlinkRefused`] (including a `.trash` that is a link), or [`Error::Io`].
+    pub fn trash_note(&self, path: &VaultPath, expected: Revision) -> Result<VaultPath, Error> {
+        let source = self.resolve_note(path)?;
+        check_unchanged(&source, expected)?;
+        for attempt in 1..=MAX_TRASH_NAMES {
+            let destination = trash_destination(path, attempt)?;
+            let target = self.resolve_inside(&destination)?;
+            self.create_parent_folders(&destination)?;
+            match durable::move_no_replace(&source, &target) {
+                Ok(()) => return Ok(destination),
+                Err(Error::NoteExists) => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Err(Error::Io {
+            operation: "move the note to the trash".to_owned(),
+            kind: "too many notes with that name are already in the trash".to_owned(),
+        })
     }
 
     /// Checks that `path` can name a note and that nothing on the way to it is a symbolic link,
@@ -360,6 +408,12 @@ impl Vault {
                 reason: "not a .md file".to_owned(),
             });
         }
+        self.resolve_inside(path)
+    }
+
+    /// Returns where `path` is on disk, refusing a path that goes through a symbolic link.
+    /// Components that do not exist yet are fine.
+    fn resolve_inside(&self, path: &VaultPath) -> Result<PathBuf, Error> {
         let components: Vec<&str> = path.components().collect();
         let mut full = self.root.clone();
         for (index, component) in components.iter().enumerate() {
@@ -409,6 +463,35 @@ impl Vault {
         }
         Ok(())
     }
+}
+
+/// The most numbered names `trash_note` tries for one note before giving up.
+const MAX_TRASH_NAMES: u32 = 1000;
+
+/// Fails unless a regular file is at `full` in the state `expected` describes.
+fn check_unchanged(full: &std::path::Path, expected: Revision) -> Result<(), Error> {
+    let current = fs::symlink_metadata(full).map_err(|e| match e.kind() {
+        ErrorKind::NotFound => Error::NoteNotFound,
+        _ => Error::io("check the note", &e),
+    })?;
+    if !current.is_file() {
+        return Err(Error::NoteNotFound);
+    }
+    if Revision::of(&current) != expected {
+        return Err(Error::Conflict);
+    }
+    Ok(())
+}
+
+/// `.trash/<path>` for the first attempt, then `.trash/<folders>/<stem> (n).md`.
+fn trash_destination(path: &VaultPath, attempt: u32) -> Result<VaultPath, Error> {
+    let raw = path.as_str();
+    if attempt == 1 {
+        return VaultPath::parse(&format!(".trash/{raw}"));
+    }
+    // A note path always ends in `.md` (any case), checked by `resolve_note`.
+    let (stem, extension) = raw.rsplit_once('.').unwrap_or((raw, "md"));
+    VaultPath::parse(&format!(".trash/{stem} ({attempt}).{extension}"))
 }
 
 fn check_size(markdown: &str) -> Result<(), Error> {

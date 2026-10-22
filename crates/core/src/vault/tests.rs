@@ -532,6 +532,240 @@ fn write_refuses_a_symlinked_note() {
     assert_eq!(outside.read("secret.md"), "outside the vault");
 }
 
+// --- move_note ---
+
+fn revision_of(vault: &Vault, raw: &str) -> Revision {
+    vault.read_note(&path(raw)).unwrap().revision
+}
+
+#[test]
+fn moves_a_note_and_keeps_its_contents_and_revision() {
+    let vault = TempVault::new();
+    vault.file("a.md", "contents");
+    let opened = vault.open();
+    let before = revision_of(&opened, "a.md");
+    let after = opened
+        .move_note(&path("a.md"), &path("b.md"), before)
+        .unwrap();
+    assert_eq!(vault.read("b.md"), "contents");
+    assert!(!vault.dir.join("a.md").exists());
+    assert_eq!(after, revision_of(&opened, "b.md"));
+    assert_eq!(after.size_bytes, before.size_bytes);
+}
+
+#[test]
+fn move_creates_missing_folders() {
+    let vault = TempVault::new();
+    vault.file("a.md", "x");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    opened
+        .move_note(&path("a.md"), &path("Archive/2026/a.md"), revision)
+        .unwrap();
+    assert_eq!(vault.read("Archive/2026/a.md"), "x");
+}
+
+#[test]
+fn move_never_replaces_an_existing_note() {
+    let vault = TempVault::new();
+    vault.file("a.md", "mine").file("b.md", "theirs");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    assert_eq!(
+        opened
+            .move_note(&path("a.md"), &path("b.md"), revision)
+            .unwrap_err(),
+        Error::NoteExists
+    );
+    assert_eq!(vault.read("a.md"), "mine");
+    assert_eq!(vault.read("b.md"), "theirs");
+}
+
+#[test]
+fn move_changes_only_letter_case() {
+    let vault = TempVault::new();
+    vault.file("plan.md", "x");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "plan.md");
+    opened
+        .move_note(&path("plan.md"), &path("Plan.md"), revision)
+        .unwrap();
+    assert_eq!(vault.names_in(""), ["Plan.md"]);
+}
+
+/// Only meaningful on a case-sensitive filesystem (Linux CI, or a case-sensitive APFS volume),
+/// where both names can exist; elsewhere it returns early.
+#[test]
+fn case_only_rename_never_replaces_a_differently_cased_note() {
+    let vault = TempVault::new();
+    vault.file("plan.md", "lower").file("Plan.md", "upper");
+    if vault.names_in("").len() < 2 {
+        return;
+    }
+    let opened = vault.open();
+    let revision = revision_of(&opened, "plan.md");
+    assert_eq!(
+        opened
+            .move_note(&path("plan.md"), &path("Plan.md"), revision)
+            .unwrap_err(),
+        Error::NoteExists
+    );
+    assert_eq!(vault.read("Plan.md"), "upper");
+    assert_eq!(vault.read("plan.md"), "lower");
+}
+
+#[test]
+fn move_to_the_same_path_changes_nothing() {
+    let vault = TempVault::new();
+    vault.file("a.md", "x");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    assert_eq!(
+        opened.move_note(&path("a.md"), &path("a.md"), revision),
+        Ok(revision)
+    );
+    assert_eq!(vault.read("a.md"), "x");
+}
+
+#[test]
+fn move_refuses_when_the_note_changed_on_disk() {
+    let vault = TempVault::new();
+    vault.file("a.md", "old");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    vault.file("a.md", "edited elsewhere");
+    assert_eq!(
+        opened
+            .move_note(&path("a.md"), &path("b.md"), revision)
+            .unwrap_err(),
+        Error::Conflict
+    );
+    assert!(!vault.dir.join("b.md").exists());
+}
+
+#[test]
+fn move_reports_a_missing_note() {
+    let vault = TempVault::new();
+    let revision = Revision {
+        size_bytes: 0,
+        modified_ns: None,
+    };
+    assert_eq!(
+        vault
+            .open()
+            .move_note(&path("a.md"), &path("b.md"), revision)
+            .unwrap_err(),
+        Error::NoteNotFound
+    );
+}
+
+#[test]
+fn move_refuses_a_hidden_or_non_markdown_target() {
+    let vault = TempVault::new();
+    vault.file("a.md", "x");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    for target in [".git/hooks/a.md", "a.txt"] {
+        assert!(matches!(
+            opened.move_note(&path("a.md"), &path(target), revision),
+            Err(Error::NotANote { .. })
+        ));
+    }
+    assert_eq!(vault.read("a.md"), "x");
+}
+
+#[cfg(unix)]
+#[test]
+fn move_refuses_a_target_through_a_symlinked_folder() {
+    let vault = TempVault::new();
+    let outside = TempVault::new();
+    vault.file("a.md", "x");
+    symlink(&outside.dir, &vault.dir.join("linked"));
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    assert_eq!(
+        opened
+            .move_note(&path("a.md"), &path("linked/a.md"), revision)
+            .unwrap_err(),
+        Error::SymlinkRefused
+    );
+    assert!(outside.names_in("").is_empty());
+}
+
+// --- trash_note ---
+
+#[test]
+fn trash_moves_the_note_into_dot_trash_keeping_its_folders() {
+    let vault = TempVault::new();
+    vault.file("notes/a.md", "x");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "notes/a.md");
+    let trashed = opened.trash_note(&path("notes/a.md"), revision).unwrap();
+    assert_eq!(trashed, path(".trash/notes/a.md"));
+    assert_eq!(vault.read(".trash/notes/a.md"), "x");
+    assert!(opened.list_notes().unwrap().notes.is_empty());
+}
+
+#[test]
+fn trash_numbers_a_name_already_in_the_trash() {
+    let vault = TempVault::new();
+    vault
+        .file(".trash/notes/a.md", "older")
+        .file(".trash/notes/a (2).md", "old")
+        .file("notes/a.md", "new");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "notes/a.md");
+    let trashed = opened.trash_note(&path("notes/a.md"), revision).unwrap();
+    assert_eq!(trashed, path(".trash/notes/a (3).md"));
+    assert_eq!(vault.read(".trash/notes/a.md"), "older");
+    assert_eq!(vault.read(".trash/notes/a (3).md"), "new");
+}
+
+#[test]
+fn trash_refuses_when_the_note_changed_on_disk() {
+    let vault = TempVault::new();
+    vault.file("a.md", "old");
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    vault.file("a.md", "edited elsewhere");
+    assert_eq!(
+        opened.trash_note(&path("a.md"), revision).unwrap_err(),
+        Error::Conflict
+    );
+    assert_eq!(vault.read("a.md"), "edited elsewhere");
+}
+
+#[test]
+fn trash_refuses_notes_already_in_the_trash() {
+    let vault = TempVault::new();
+    vault.file(".trash/a.md", "x");
+    let revision = Revision {
+        size_bytes: 1,
+        modified_ns: None,
+    };
+    assert!(matches!(
+        vault.open().trash_note(&path(".trash/a.md"), revision),
+        Err(Error::NotANote { .. })
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn trash_refuses_a_symlinked_trash_folder() {
+    let vault = TempVault::new();
+    let outside = TempVault::new();
+    vault.file("a.md", "x");
+    symlink(&outside.dir, &vault.dir.join(".trash"));
+    let opened = vault.open();
+    let revision = revision_of(&opened, "a.md");
+    assert_eq!(
+        opened.trash_note(&path("a.md"), revision).unwrap_err(),
+        Error::SymlinkRefused
+    );
+    assert_eq!(vault.read("a.md"), "x");
+    assert!(outside.names_in("").is_empty());
+}
+
 // --- errors ---
 
 #[test]

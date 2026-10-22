@@ -74,10 +74,16 @@ tessera/
   time). Notes must be UTF-8 and at most 16 MiB.
 - `create_note` never replaces a file. `write_note` takes the revision it is based on, refuses
   with `Conflict` if another program changed the note since, and replaces the file atomically.
+- `move_note` renames or moves a note, creating folders as needed. It never replaces anything at
+  the destination (hard link, then remove the old name) and handles case-only renames on
+  case-insensitive filesystems.
+- `trash_note` moves a note into the vault's `.trash`, keeping its folders, as Obsidian does;
+  names already in the trash get a number. Nothing in the core deletes a note outright.
+- Every operation that changes an existing note takes the revision it is based on and refuses
+  with `Conflict` if the note changed on disk.
 - Paths are `VaultPath`s; links inside the vault are never followed (see the threat model).
 
-Not built yet: rename, move and delete (to the vault's `.trash` or the OS trash), attachments,
-and file watching.
+Not built yet: attachments and file watching.
 
 The desktop app opens a vault with the native folder picker and can list and read notes
 (`open_vault`, `list_notes`, `read_note` in `apps/desktop/src-tauri/src/commands.rs`). It shows a
