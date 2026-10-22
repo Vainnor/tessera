@@ -5,14 +5,14 @@ choose, compatible with Obsidian vaults. Sync between devices will be end-to-end
 the server cannot read your notes.
 
 **Status: early development.** The foundations are in place (the Rust core, a desktop app shell,
-the theme system and the website), but you cannot write notes in it yet. Nothing below marked
+the theme system and the website). The desktop app can open a folder of markdown notes and show them, but you cannot edit notes in it yet. Nothing below marked
 _planned_ exists.
 
 |                                                                               | Status                            |
 | ----------------------------------------------------------------------------- | --------------------------------- |
 | Open source under AGPL-3.0-or-later                                           | Available                         |
 | Themes: Vainnor, Light, Dark, Paper, High contrast, plus your own JSON themes | In progress (built, not released) |
-| Markdown vaults compatible with Obsidian                                      | Planned                           |
+| Markdown vaults compatible with Obsidian: open a folder, list and read notes  | In progress (built, not released) |
 | Editor, backlinks, local full-text search                                     | Planned                           |
 | End-to-end encrypted sync, self-hostable server                               | Planned                           |
 | Native iPad app with Apple Pencil handwriting, drawing and PDF annotation     | Planned                           |

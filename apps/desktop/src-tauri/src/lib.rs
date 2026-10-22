@@ -4,11 +4,21 @@
 #![forbid(unsafe_code)]
 
 mod commands;
+mod dto;
 
 /// Builds and runs the app until the last window closes.
 pub fn run() {
     let result = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![commands::app_info])
+        // Registered for the Rust-side folder picker only. The capability grants no `dialog:`
+        // permission, so the plugin's own JavaScript commands are refused.
+        .plugin(tauri_plugin_dialog::init())
+        .manage(commands::AppState::default())
+        .invoke_handler(tauri::generate_handler![
+            commands::app_info,
+            commands::open_vault,
+            commands::list_notes,
+            commands::read_note,
+        ])
         .run(tauri::generate_context!());
     if let Err(error) = result {
         // The window never opened, so stderr is the only place left to report it.

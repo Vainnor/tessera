@@ -35,17 +35,18 @@ Each one is here because nothing smaller does the job. The policy for adding mor
 
 ### Rust
 
-| Crate                           | Used by         | Why                                                                           |
-| ------------------------------- | --------------- | ----------------------------------------------------------------------------- |
-| `thiserror`                     | core, server    | Typed error enums without hand-written `Display` impls                        |
-| `anyhow`                        | server binary   | Context on setup errors in binaries only; libraries use `thiserror`           |
-| `serde`, `serde_json`           | server, desktop | Config and IPC serialization; the de facto standard                           |
-| `toml`                          | server          | Config file format; `parse` + `serde` features only                           |
-| `tokio`                         | server          | Async runtime for axum; only `macros`, `net`, `rt-multi-thread`, `signal`     |
-| `axum`                          | server          | HTTP routing from the tokio team, thin over hyper; `default-features = false` |
-| `tracing`, `tracing-subscriber` | server          | Structured logs, JSON output, `RUST_LOG` filters                              |
-| `tauri`, `tauri-build`          | desktop         | The shell. `default-features = false`; no plugins                             |
-| `tower`, `http-body-util` (dev) | server tests    | Drive the router in tests without a socket                                    |
+| Crate                           | Used by         | Why                                                                                                                                                                                           |
+| ------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thiserror`                     | core, server    | Typed error enums without hand-written `Display` impls                                                                                                                                        |
+| `anyhow`                        | server binary   | Context on setup errors in binaries only; libraries use `thiserror`                                                                                                                           |
+| `serde`, `serde_json`           | server, desktop | Config and IPC serialization; the de facto standard                                                                                                                                           |
+| `toml`                          | server          | Config file format; `parse` + `serde` features only                                                                                                                                           |
+| `tokio`                         | server          | Async runtime for axum; only `macros`, `net`, `rt-multi-thread`, `signal`                                                                                                                     |
+| `axum`                          | server          | HTTP routing from the tokio team, thin over hyper; `default-features = false`                                                                                                                 |
+| `tracing`, `tracing-subscriber` | server          | Structured logs, JSON output, `RUST_LOG` filters                                                                                                                                              |
+| `tauri`, `tauri-build`          | desktop         | The shell. `default-features = false`; one plugin, below                                                                                                                                      |
+| `tauri-plugin-dialog`           | desktop         | The native folder picker for opening a vault, called from Rust only; no JS permission. Official Tauri plugin, MIT/Apache-2.0. Brings `rfd` and `tauri-plugin-fs` (types only; not registered) |
+| `tower`, `http-body-util` (dev) | server tests    | Drive the router in tests without a socket                                                                                                                                                    |
 
 ### JavaScript
 

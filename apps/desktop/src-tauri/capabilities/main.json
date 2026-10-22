@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "The main window. Only Tessera's own commands, each granted by name. No core:default, no plugins: no shell, fs, opener, http or updater access from JavaScript.",
+  "description": "The main window. Only Tessera's own commands, each granted by name. No core:default and no plugin permissions: no shell, fs, dialog, opener, http or updater access from JavaScript. The dialog plugin is registered for the Rust-side folder picker only.",
   "windows": ["main"],
-  "permissions": ["allow-app-info"]
+  "permissions": ["allow-app-info", "allow-open-vault", "allow-list-notes", "allow-read-note"]
 }

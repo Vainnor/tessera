@@ -2,8 +2,8 @@
 
 .shell {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  min-height: 100vh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100vh;
 }
 
 .shell__bar {
@@ -37,4 +37,103 @@
   font-family: var(--t-font-code);
   font-size: var(--t-text-xs);
   min-height: calc(var(--t-space-2) * 2 + 1lh);
+}
+
+.shell__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--t-space-4);
+}
+
+.shell__error,
+.vault__status:not(:empty) {
+  color: var(--t-color-danger);
+}
+
+.shell__vault {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+/* The open vault: note list beside the selected note. */
+
+.vault {
+  display: grid;
+  grid-template-columns: minmax(14rem, 22rem) 1fr;
+  min-height: 0;
+}
+
+.vault__list {
+  overflow-y: auto;
+  padding: var(--t-space-3);
+  border-right: 1px solid var(--t-color-border);
+  background: var(--t-color-surface);
+}
+
+.vault__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--t-space-2);
+  margin-bottom: var(--t-space-3);
+}
+
+.vault__heading h2 {
+  font-size: var(--t-text-md);
+  overflow-wrap: anywhere;
+}
+
+.vault__list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vault__note {
+  display: block;
+  width: 100%;
+  min-height: 1.5rem;
+  padding: var(--t-space-1) var(--t-space-2);
+  border: 0;
+  border-radius: var(--t-radius-sm);
+  background: transparent;
+  color: var(--t-color-text);
+  font: inherit;
+  font-size: var(--t-text-sm);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.vault__note:hover {
+  background: var(--t-color-surface-raised);
+}
+
+.vault__note[aria-current="page"] {
+  background: var(--t-color-selection);
+}
+
+.vault__notice {
+  margin-top: var(--t-space-3);
+  font-size: var(--t-text-xs);
+}
+
+.vault__note-view {
+  overflow-y: auto;
+  padding: var(--t-space-4) var(--t-space-6);
+}
+
+.vault__title {
+  font-size: var(--t-text-xl);
+  overflow-wrap: anywhere;
+}
+
+.vault__source {
+  margin-top: var(--t-space-4);
+  font-family: var(--t-font-code);
+  font-size: var(--t-text-sm);
+  line-height: var(--t-leading-relaxed);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

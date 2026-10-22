@@ -19,8 +19,10 @@ tauri-build = { version = "2.7", default-features = false, features = [] }
 [dependencies]
 tessera-core.workspace = true
 serde.workspace = true
-# No default features we do not use; no plugins. See docs/architecture.md § Dependencies.
+# No default features we do not use. See docs/adr/0001-repository-and-stack.md § Dependencies.
 tauri = { version = "2.12", default-features = false, features = ["wry", "compression", "common-controls-v6"] }
+# The native folder picker, called from Rust only; no dialog permission is granted to JS.
+tauri-plugin-dialog = "2.8.3"
 
 [dev-dependencies]
 serde_json.workspace = true

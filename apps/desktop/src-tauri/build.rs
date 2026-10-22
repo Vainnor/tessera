@@ -2,8 +2,13 @@
 //! A command missing here cannot be granted, and so cannot be called.
 
 fn main() {
-    let attributes = tauri_build::Attributes::new()
-        .app_manifest(tauri_build::AppManifest::new().commands(&["app_info"]));
+    let attributes =
+        tauri_build::Attributes::new().app_manifest(tauri_build::AppManifest::new().commands(&[
+            "app_info",
+            "open_vault",
+            "list_notes",
+            "read_note",
+        ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         #[allow(
             clippy::print_stderr,

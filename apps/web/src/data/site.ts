@@ -25,7 +25,7 @@ export const FEATURES: readonly Feature[] = [
     title: "Plain markdown files",
     description:
       "A vault is a folder of .md files with wikilinks and frontmatter, laid out like Obsidian's.",
-    status: "planned",
+    status: "in-progress",
   },
   {
     title: "Real-time sync",

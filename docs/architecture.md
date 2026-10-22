@@ -77,7 +77,12 @@ tessera/
 - Paths are `VaultPath`s; links inside the vault are never followed (see the threat model).
 
 Not built yet: rename, move and delete (to the vault's `.trash` or the OS trash), attachments,
-file watching, and the desktop commands that expose the vault to the UI.
+and file watching.
+
+The desktop app opens a vault with the native folder picker and can list and read notes
+(`open_vault`, `list_notes`, `read_note` in `apps/desktop/src-tauri/src/commands.rs`). It shows a
+note's markdown source; the editor and the write commands come next. The chosen vault is not
+remembered between launches yet.
 
 ## Sync (planned)
 
