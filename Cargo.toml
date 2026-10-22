@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "crates/server"]
+members = ["crates/core", "crates/server", "apps/desktop/src-tauri"]
 # The desktop crate embeds apps/desktop/dist at compile time, so a bare `cargo build` skips it
 # until the frontend is built. `cargo build --workspace` includes it.
-default-members = ["crates/core", "crates/server"]
+default-members = ["crates/core", "crates/server", "apps/desktop/src-tauri"]
 
 [workspace.package]
 version = "0.0.0"

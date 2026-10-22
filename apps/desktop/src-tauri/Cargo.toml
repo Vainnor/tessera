@@ -1,0 +1,29 @@
+[package]
+name = "tessera-desktop"
+description = "Tessera's desktop shell: a Tauri window around the React UI and tessera-core."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+name = "tessera_desktop_lib"
+crate-type = ["lib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", default-features = false, features = [] }
+
+[dependencies]
+tessera-core.workspace = true
+serde.workspace = true
+# No default features we do not use; no plugins. See docs/architecture.md § Dependencies.
+tauri = { version = "2.12", default-features = false, features = ["wry", "compression", "common-controls-v6"] }
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -8,7 +8,13 @@ version = 2
 yanked = "deny"
 # Each ignore carries an id, a reason and a revisit date. Unmaintained-but-not-vulnerable
 # crates on Tauri's Linux path are the expected entries here.
-ignore = []
+ignore = [
+  # Unmaintained, not vulnerable: a build-time proc macro reached only through gtk-rs 0.18 on
+  # Tauri's Linux webview path. Revisit 2027-01-31 or when Tauri moves off gtk-rs 0.18.
+  # cargo audit also prints RUSTSEC-2024-0429 (glib VariantStrIter unsoundness) on the same
+  # path as a warning; Tessera never calls that API.
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error: build-time macro via gtk 0.18 (Tauri Linux)" },
+]
 
 [licenses]
 version = 2

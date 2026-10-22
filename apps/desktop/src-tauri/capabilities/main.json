@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "The main window. Only Tessera's own commands, each granted by name. No core:default, no plugins: no shell, fs, opener, http or updater access from JavaScript.",
+  "windows": ["main"],
+  "permissions": ["allow-app-info"]
+}

@@ -1,0 +1,40 @@
+/* App shell layout. Tokens only (.claude/rules/theming.md). */
+
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+.shell__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--t-space-4);
+  padding: var(--t-space-2) var(--t-space-4);
+  border-bottom: 1px solid var(--t-color-border);
+  background: var(--t-color-surface);
+}
+
+.shell__theme {
+  display: flex;
+  align-items: center;
+  gap: var(--t-space-2);
+  font-size: var(--t-text-sm);
+}
+
+.shell__main {
+  display: grid;
+  place-content: center;
+  gap: var(--t-space-3);
+  padding: var(--t-space-6);
+  text-align: center;
+}
+
+.shell__footer {
+  padding: var(--t-space-2) var(--t-space-4);
+  border-top: 1px solid var(--t-color-border);
+  font-family: var(--t-font-code);
+  font-size: var(--t-text-xs);
+  min-height: calc(var(--t-space-2) * 2 + 1lh);
+}
