@@ -1,9 +1,6 @@
-//! The vault: a folder of markdown files laid out the way Obsidian lays them out.
-//!
-//! The files on disk are the user's data. The core reads and writes them; it never moves the
-//! source of truth into a database.
+//! Validated paths inside a vault.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::Error;
 
@@ -61,6 +58,18 @@ impl VaultPath {
         &self.0
     }
 
+    /// The path's components, root first.
+    pub(crate) fn components(&self) -> impl Iterator<Item = &str> {
+        self.0.split('/')
+    }
+
+    /// Whether any component starts with `.`, the convention for app and tool folders such as
+    /// `.obsidian`, `.git` and `.trash`. Note operations leave these alone.
+    #[must_use]
+    pub fn is_hidden(&self) -> bool {
+        self.components().any(|c| c.starts_with('.'))
+    }
+
     /// Whether the path names a markdown note (`.md`, any case).
     #[must_use]
     pub fn is_markdown(&self) -> bool {
@@ -105,37 +114,6 @@ fn validate_component(component: &str) -> Result<(), &'static str> {
         return Err("reserved name on Windows");
     }
     Ok(())
-}
-
-/// An open vault. Stub: it validates and remembers its root; reading notes is not built yet.
-#[derive(Debug)]
-pub struct Vault {
-    root: PathBuf,
-}
-
-impl Vault {
-    /// Opens the vault rooted at `root`.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::VaultUnavailable`] when `root` is not an existing directory.
-    pub fn open(root: &str) -> Result<Self, Error> {
-        let root = PathBuf::from(root);
-        if !root.is_dir() {
-            return Err(Error::VaultUnavailable);
-        }
-        Ok(Self { root })
-    }
-
-    /// Lists the markdown notes in the vault.
-    ///
-    /// # Errors
-    ///
-    /// Always [`Error::NotImplemented`] for now.
-    pub fn list_notes(&self) -> Result<Vec<VaultPath>, Error> {
-        let _ = &self.root;
-        Err(Error::not_implemented("Vault::list_notes"))
-    }
 }
 
 #[cfg(test)]
@@ -252,20 +230,9 @@ mod tests {
     }
 
     #[test]
-    fn open_rejects_a_missing_folder() {
-        let missing = std::env::temp_dir().join("tessera-core-test-missing-vault");
-        assert_eq!(
-            Vault::open(missing.to_str().unwrap()).unwrap_err(),
-            Error::VaultUnavailable
-        );
-    }
-
-    #[test]
-    fn list_notes_fails_closed_until_implemented() {
-        let vault = Vault::open(std::env::temp_dir().to_str().unwrap()).unwrap();
-        assert!(matches!(
-            vault.list_notes(),
-            Err(Error::NotImplemented { .. })
-        ));
+    fn hidden_when_any_component_starts_with_a_dot() {
+        assert!(VaultPath::parse(".obsidian/app.json").unwrap().is_hidden());
+        assert!(VaultPath::parse("notes/.draft.md").unwrap().is_hidden());
+        assert!(!VaultPath::parse("notes/draft.md").unwrap().is_hidden());
     }
 }

@@ -62,6 +62,23 @@ tessera/
 - **Website.** Built at compile time from the same theme tokens; ships one small script.
 - **Server.** Will store per-vault logs of encrypted update batches and blobs, and relay them.
 
+## The vault
+
+`tessera-core`'s `Vault` (`crates/core/src/vault/`) is the only code that touches notes on disk.
+
+- `list_notes` walks the folder and returns markdown notes and folders, sorted. It skips hidden
+  entries (`.obsidian`, `.git`, `.trash`) silently and reports what it could not list: symbolic
+  links, names some OS cannot store, folders deeper than 64 levels, unreadable folders. It stops
+  at 200,000 entries and says so.
+- `read_note` returns the markdown exactly as stored plus a `Revision` (size and modification
+  time). Notes must be UTF-8 and at most 16 MiB.
+- `create_note` never replaces a file. `write_note` takes the revision it is based on, refuses
+  with `Conflict` if another program changed the note since, and replaces the file atomically.
+- Paths are `VaultPath`s; links inside the vault are never followed (see the threat model).
+
+Not built yet: rename, move and delete (to the vault's `.trash` or the OS trash), attachments,
+file watching, and the desktop commands that expose the vault to the UI.
+
 ## Sync (planned)
 
 A CRDT library merges concurrent edits (candidates: Yjs via `yrs`, Loro, Automerge). The
