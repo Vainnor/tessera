@@ -89,16 +89,35 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The runner's Ubuntu mirror can be very slow, so the webview packages are cached as .deb
+      # files. Bump the key's version to refresh them.
+      - name: Cache Linux webview packages
+        if: runner.os == 'Linux'
+        id: apt-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/apt-cache
+          key: apt-${{ matrix.os }}-webkit2gtk-4.1-v1
       - name: Linux webview dependencies
         if: runner.os == 'Linux'
-        # man-db rebuilds its index after every install, which can stall for many minutes on
-        # hosted runners; nothing here reads man pages.
+        env:
+          CACHE_HIT: ${{ steps.apt-cache.outputs.cache-hit }}
+          PACKAGES: libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
         run: |
           echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
           sudo dpkg-reconfigure man-db
+          # From the cache, install the saved packages directly. If they no longer fit the
+          # runner image, fall back to apt, which refreshes the cache.
+          if [ "$CACHE_HIT" = "true" ] && sudo dpkg -i ~/apt-cache/*.deb; then
+            exit 0
+          fi
+          mkdir -p ~/apt-cache/partial
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+          # shellcheck disable=SC2086 # PACKAGES is a word list
+          sudo apt-get install -y --no-install-recommends -o APT::Keep-Downloaded-Packages=true \
+            -o Dir::Cache::Archives="$HOME/apt-cache" $PACKAGES
+          sudo chown -R "$USER" ~/apt-cache
+          rm -rf ~/apt-cache/partial ~/apt-cache/lock
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
