@@ -18,7 +18,7 @@ features do not yet. Read [`docs/architecture.md`](docs/architecture.md) first.
 You need:
 
 - Rust (the version in `rust-toolchain.toml` installs itself through `rustup`)
-- Node.js 24 or newer and pnpm 10 or newer (`corepack enable` gives you the pinned pnpm)
+- Node.js 24 or newer and pnpm 12 (`corepack enable` gives you the pinned version)
 - Tauri's system dependencies for your OS: <https://v2.tauri.app/start/prerequisites/>
 - Optional: `cargo-deny`, `cargo-audit` and `gitleaks` to run the supply-chain and secret checks
   locally
