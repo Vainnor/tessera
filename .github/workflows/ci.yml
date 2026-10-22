@@ -21,6 +21,7 @@ jobs:
   js:
     name: JS lint, test, build
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -45,6 +46,7 @@ jobs:
   lighthouse:
     name: Website Lighthouse budget
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -64,6 +66,7 @@ jobs:
   fmt:
     name: Rust format
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -79,6 +82,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     permissions:
       contents: read
     steps:
@@ -87,9 +91,14 @@ jobs:
           persist-credentials: false
       - name: Linux webview dependencies
         if: runner.os == 'Linux'
+        # man-db rebuilds its index after every install, which can stall for many minutes on
+        # hosted runners; nothing here reads man pages.
         run: |
+          echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
+          sudo dpkg-reconfigure man-db
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -105,6 +114,7 @@ jobs:
   supply-chain:
     name: cargo-deny and cargo-audit
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -122,6 +132,7 @@ jobs:
   secrets:
     name: Secret scan (full history)
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
     env:
