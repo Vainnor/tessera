@@ -364,6 +364,17 @@ fn create_never_replaces_an_existing_note() {
 }
 
 #[test]
+fn create_reports_a_folder_named_like_the_note_as_existing() {
+    let vault = TempVault::new();
+    vault.folder("a.md");
+    assert_eq!(
+        vault.open().create_note(&path("a.md"), "new").unwrap_err(),
+        Error::NoteExists
+    );
+    assert!(vault.dir.join("a.md").is_dir());
+}
+
+#[test]
 fn create_refuses_hidden_paths() {
     let vault = TempVault::new();
     assert!(matches!(

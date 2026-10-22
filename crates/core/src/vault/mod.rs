@@ -242,6 +242,14 @@ impl Vault {
     /// [`Error::NotUtf8`], or [`Error::Io`].
     pub fn read_note(&self, path: &VaultPath) -> Result<Note, Error> {
         let full = self.resolve_note(path)?;
+        // Windows refuses to open a folder as a file ("permission denied"), so check the type
+        // first to report a folder named like a note the same way on every platform.
+        match fs::symlink_metadata(&full) {
+            Ok(metadata) if !metadata.is_file() => return Err(Error::NoteNotFound),
+            Ok(_) => {}
+            Err(e) if e.kind() == ErrorKind::NotFound => return Err(Error::NoteNotFound),
+            Err(e) => return Err(Error::io("check the note", &e)),
+        }
         let file = File::open(&full).map_err(|e| match e.kind() {
             ErrorKind::NotFound => Error::NoteNotFound,
             _ => Error::io("open the note", &e),
@@ -285,6 +293,11 @@ impl Vault {
         let full = self.resolve_note(path)?;
         check_size(markdown)?;
         self.create_parent_folders(path)?;
+        // `create_new` below is what guarantees no replacement. This check only makes a folder in
+        // the way report `NoteExists` on Windows too, where creating over one is "permission denied".
+        if fs::symlink_metadata(&full).is_ok() {
+            return Err(Error::NoteExists);
+        }
         let mut file = File::options()
             .write(true)
             .create_new(true)
