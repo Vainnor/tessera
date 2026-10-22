@@ -1,0 +1,105 @@
+/* Shared component classes. React components in src/ and Astro markup both use these. */
+
+.t-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5ch;
+  font-family: var(--t-font-code);
+  font-weight: var(--t-weight-bold);
+  color: var(--t-color-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.t-wordmark__mark {
+  letter-spacing: -0.05em;
+}
+
+.t-wordmark__cursor {
+  color: var(--t-color-accent);
+}
+
+.t-wordmark__name {
+  font-weight: var(--t-weight-medium);
+  text-transform: var(--t-heading-case);
+}
+
+.t-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--t-space-2);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: var(--t-space-2) var(--t-space-4);
+  border: 1px solid var(--t-color-border-strong);
+  border-radius: var(--t-radius-md);
+  background: var(--t-color-surface);
+  color: var(--t-color-text);
+  font-weight: var(--t-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--t-duration-fast) var(--t-ease-standard),
+    border-color var(--t-duration-fast) var(--t-ease-standard);
+}
+
+.t-button:hover {
+  background: var(--t-color-surface-raised);
+}
+
+.t-button--primary {
+  border-color: var(--t-color-accent);
+  background: var(--t-color-accent);
+  color: var(--t-color-on-accent);
+}
+
+.t-button--primary:hover {
+  background: var(--t-color-accent);
+  text-decoration: underline;
+}
+
+.t-button:disabled,
+.t-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.t-card {
+  padding: var(--t-space-4);
+  border: 1px solid var(--t-color-border);
+  border-radius: var(--t-radius-lg);
+  background: var(--t-color-surface);
+  box-shadow: var(--t-shadow-1);
+}
+
+.t-badge {
+  display: inline-block;
+  padding: 0 var(--t-space-2);
+  border: 1px solid var(--t-color-border-strong);
+  border-radius: var(--t-radius-full);
+  color: var(--t-color-text-muted);
+  font-family: var(--t-font-code);
+  font-size: var(--t-text-xs);
+  line-height: var(--t-leading-normal);
+  text-transform: lowercase;
+  vertical-align: middle;
+}
+
+.t-badge--available {
+  border-color: var(--t-color-success);
+  color: var(--t-color-success);
+}
+
+.t-select {
+  min-height: 2.75rem;
+  padding: var(--t-space-1) var(--t-space-3);
+  border: 1px solid var(--t-color-border-strong);
+  border-radius: var(--t-radius-md);
+  background: var(--t-color-surface);
+  color: var(--t-color-text);
+}
+
+.t-muted {
+  color: var(--t-color-text-muted);
+}

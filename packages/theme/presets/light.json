@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "schemaVersion": 1,
+  "id": "light",
+  "name": "Light",
+  "description": "Neutral light theme with system sans-serif type.",
+  "mode": "light",
+  "colors": {
+    "background": "#ffffff",
+    "surface": "#f6f7f9",
+    "surfaceRaised": "#ffffff",
+    "border": "#e1e4ea",
+    "borderStrong": "#7a8392",
+    "text": "#1b1f27",
+    "textMuted": "#535b69",
+    "accent": "#5b3fc4",
+    "onAccent": "#ffffff",
+    "focus": "#5b3fc4",
+    "danger": "#b3261e",
+    "success": "#1e7a3c",
+    "warning": "#8a5a00",
+    "selection": "#d9d0f7"
+  },
+  "typography": { "body": "sans", "heading": "sans", "scale": 1, "headingCase": "none" },
+  "radius": 6,
+  "density": "comfortable",
+  "elevation": "raised",
+  "motion": true
+}

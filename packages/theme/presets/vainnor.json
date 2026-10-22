@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "schemaVersion": 1,
+  "id": "vainnor",
+  "name": "Vainnor",
+  "description": "The default. Retro terminal: monospace, lowercase headings, flat surfaces, lilac accent. PROVISIONAL palette shared with Muster.",
+  "mode": "dark",
+  "colors": {
+    "background": "#2e3440",
+    "surface": "#353c4a",
+    "surfaceRaised": "#3b4252",
+    "border": "#4c566a",
+    "borderStrong": "#8790a6",
+    "text": "#e5e9f0",
+    "textMuted": "#b8c0cf",
+    "accent": "#c8b4f0",
+    "onAccent": "#2e3440",
+    "focus": "#c8b4f0",
+    "danger": "#e8a0a8",
+    "success": "#b4d8a8",
+    "warning": "#f0d8a0",
+    "selection": "#4c566a"
+  },
+  "typography": { "body": "mono", "heading": "mono", "scale": 1, "headingCase": "lowercase" },
+  "radius": 2,
+  "density": "compact",
+  "elevation": "flat",
+  "motion": false
+}

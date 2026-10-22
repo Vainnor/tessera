@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "schemaVersion": 1,
+  "id": "dark",
+  "name": "Dark",
+  "description": "Neutral dark theme with system sans-serif type.",
+  "mode": "dark",
+  "colors": {
+    "background": "#16181d",
+    "surface": "#1d2027",
+    "surfaceRaised": "#252932",
+    "border": "#2f343e",
+    "borderStrong": "#6b7383",
+    "text": "#e6e8ec",
+    "textMuted": "#a3aab6",
+    "accent": "#b8a3ff",
+    "onAccent": "#16181d",
+    "focus": "#b8a3ff",
+    "danger": "#ff8a80",
+    "success": "#7fd49a",
+    "warning": "#f2c46d",
+    "selection": "#3b3557"
+  },
+  "typography": { "body": "sans", "heading": "sans", "scale": 1, "headingCase": "none" },
+  "radius": 6,
+  "density": "comfortable",
+  "elevation": "raised",
+  "motion": true
+}

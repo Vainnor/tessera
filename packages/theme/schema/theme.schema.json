@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tessera.vainnor.com/theme.schema.json",
+  "title": "Tessera theme",
+  "description": "A Tessera theme, version 1. Values are colors, bounded numbers and keywords only: raw CSS, URLs and @import cannot be expressed. The app enforces the same rules (packages/theme/src/validate.ts) and refuses files over 16 KiB.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "mode", "colors", "typography", "radius", "density", "elevation", "motion"],
+  "properties": {
+    "$schema": { "type": "string", "maxLength": 200 },
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "description": "Lowercase letters, digits and hyphens. Must not reuse a built-in preset id.",
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,40}$"
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 40, "pattern": "^[^\\u0000-\\u001f\\u007f]*$" },
+    "description": { "type": "string", "maxLength": 200, "pattern": "^[^\\u0000-\\u001f\\u007f]*$" },
+    "mode": { "description": "Whether the theme is light or dark; sets the browser's color-scheme.", "enum": ["light", "dark"] },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["background", "surface", "surfaceRaised", "border", "borderStrong", "text", "textMuted", "accent", "onAccent", "focus", "danger", "success", "warning", "selection"],
+      "properties": {
+        "background": { "$ref": "#/$defs/color", "description": "The page or window." },
+        "surface": { "$ref": "#/$defs/color", "description": "Panels and sidebars on the background." },
+        "surfaceRaised": { "$ref": "#/$defs/color", "description": "Menus, dialogs and popovers." },
+        "border": { "$ref": "#/$defs/color", "description": "Decorative dividers. No contrast requirement." },
+        "borderStrong": { "$ref": "#/$defs/color", "description": "Control outlines (inputs, buttons). At least 3:1 against every surface." },
+        "text": { "$ref": "#/$defs/color", "description": "Body text. At least 4.5:1 against every surface." },
+        "textMuted": { "$ref": "#/$defs/color", "description": "Secondary text. At least 4.5:1 against every surface." },
+        "accent": { "$ref": "#/$defs/color", "description": "Links, the primary action and the brand mark. At least 4.5:1 against every surface." },
+        "onAccent": { "$ref": "#/$defs/color", "description": "Text on an accent fill. At least 4.5:1 against accent." },
+        "focus": { "$ref": "#/$defs/color", "description": "The keyboard focus ring. At least 3:1 against every surface." },
+        "danger": { "$ref": "#/$defs/color", "description": "Errors and destructive actions, as text. At least 4.5:1 against background and surface." },
+        "success": { "$ref": "#/$defs/color", "description": "Success, as text. At least 4.5:1 against background and surface." },
+        "warning": { "$ref": "#/$defs/color", "description": "Warnings, as text. At least 4.5:1 against background and surface." },
+        "selection": { "$ref": "#/$defs/color", "description": "Selected text background. Text must stay 4.5:1 on it." }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["body", "heading", "scale", "headingCase"],
+      "properties": {
+        "body": { "$ref": "#/$defs/fontFamily" },
+        "heading": { "$ref": "#/$defs/fontFamily" },
+        "scale": { "description": "Multiplies every text size.", "type": "number", "minimum": 0.875, "maximum": 1.25 },
+        "headingCase": { "enum": ["none", "lowercase", "uppercase"] }
+      }
+    },
+    "radius": { "description": "Base corner radius in px.", "type": "integer", "minimum": 0, "maximum": 16 },
+    "density": { "description": "Scales every spacing token: 0.75, 1 or 1.25.", "enum": ["compact", "comfortable", "spacious"] },
+    "elevation": { "description": "flat: borders only. raised: soft shadows on raised surfaces.", "enum": ["flat", "raised"] },
+    "motion": { "description": "false turns transitions and animations off. The OS reduced-motion setting turns them off regardless.", "type": "boolean" }
+  },
+  "$defs": {
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "fontFamily": { "description": "A system font stack; Tessera loads no font files.", "enum": ["sans", "serif", "mono"] }
+  }
+}

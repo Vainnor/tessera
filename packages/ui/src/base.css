@@ -1,0 +1,123 @@
+/*
+ * Base styles for every Tessera surface. Load after @vainnor/tessera-theme/tessera.css.
+ * Tokens only: no color, size or duration literal belongs in this file (.claude/rules/theming.md).
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--t-color-background);
+  color: var(--t-color-text);
+  font-family: var(--t-font-body);
+  font-size: var(--t-text-base);
+  line-height: var(--t-leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--t-font-heading);
+  line-height: var(--t-leading-tight);
+  text-transform: var(--t-heading-case);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--t-text-2xl);
+}
+
+h2 {
+  font-size: var(--t-text-xl);
+}
+
+h3 {
+  font-size: var(--t-text-lg);
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--t-color-accent);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--t-font-code);
+  font-size: 0.95em;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--t-color-selection);
+  color: var(--t-color-text);
+}
+
+/* One focus style everywhere, keyboard only. Never remove it without a replacement. */
+:focus-visible {
+  outline: var(--t-focus-width) solid var(--t-color-focus);
+  outline-offset: var(--t-focus-offset);
+}
+
+.t-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.t-skip-link {
+  position: absolute;
+  inset-inline-start: var(--t-space-2);
+  inset-block-start: var(--t-space-2);
+  padding: var(--t-space-2) var(--t-space-3);
+  background: var(--t-color-accent);
+  color: var(--t-color-on-accent);
+  border-radius: var(--t-radius-md);
+  transform: translateY(-200%);
+}
+
+.t-skip-link:focus-visible {
+  transform: none;
+}

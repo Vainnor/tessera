@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "schemaVersion": 1,
+  "id": "paper",
+  "name": "Paper",
+  "description": "Warm sepia for long reading: serif type, roomier spacing, no shadows.",
+  "mode": "light",
+  "colors": {
+    "background": "#f4ecd8",
+    "surface": "#ede3cb",
+    "surfaceRaised": "#f8f2e3",
+    "border": "#d9ccad",
+    "borderStrong": "#8c7a55",
+    "text": "#3b2f1e",
+    "textMuted": "#6b5a40",
+    "accent": "#8b3a1a",
+    "onAccent": "#f8f2e3",
+    "focus": "#8b3a1a",
+    "danger": "#9b1c1c",
+    "success": "#3f6b1f",
+    "warning": "#7a5200",
+    "selection": "#e2cf9f"
+  },
+  "typography": { "body": "serif", "heading": "serif", "scale": 1.0625, "headingCase": "none" },
+  "radius": 4,
+  "density": "spacious",
+  "elevation": "flat",
+  "motion": true
+}

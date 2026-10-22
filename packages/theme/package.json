@@ -1,0 +1,25 @@
+{
+  "name": "@vainnor/tessera-theme",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Tessera's design tokens, preset themes and the user theme format.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tessera.css": "./dist/tessera.css",
+    "./schema.json": "./schema/theme.schema.json"
+  },
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "check:contrast": "node scripts/check-contrast.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "ajv": "^8.20.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

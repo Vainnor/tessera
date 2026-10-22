@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "schemaVersion": 1,
+  "id": "high-contrast",
+  "name": "High contrast",
+  "description": "Black, white and yellow. Every text pair is above 7:1 (WCAG AAA); larger type, square corners, no motion.",
+  "mode": "dark",
+  "colors": {
+    "background": "#000000",
+    "surface": "#0a0a0a",
+    "surfaceRaised": "#141414",
+    "border": "#ffffff",
+    "borderStrong": "#ffffff",
+    "text": "#ffffff",
+    "textMuted": "#e0e0e0",
+    "accent": "#ffd400",
+    "onAccent": "#000000",
+    "focus": "#ffd400",
+    "danger": "#ff8f8f",
+    "success": "#5dff8b",
+    "warning": "#ffd400",
+    "selection": "#0033cc"
+  },
+  "typography": { "body": "sans", "heading": "sans", "scale": 1.125, "headingCase": "none" },
+  "radius": 0,
+  "density": "comfortable",
+  "elevation": "flat",
+  "motion": false
+}
