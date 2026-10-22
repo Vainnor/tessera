@@ -41,8 +41,7 @@ step "bundle size"         pnpm  pnpm check:size
 step "pnpm audit"          pnpm  pnpm audit --audit-level=high
 step "cargo fmt"           cargo cargo fmt --all -- --check
 step "cargo clippy"        cargo cargo clippy --workspace --all-targets --locked -- -D warnings
-step "cargo tests"         cargo-nextest cargo nextest run --workspace --locked
-step "cargo doc tests"     cargo cargo test --workspace --doc --locked
+step "cargo tests"         cargo cargo test --workspace --locked
 step "cargo deny"          cargo-deny cargo deny --locked check
 step "cargo audit"         cargo-audit cargo audit
 step "secret scan"         gitleaks gitleaks git --redact --no-banner

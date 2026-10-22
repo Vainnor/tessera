@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule: { interval: weekly }
+    # Let a release age a week before proposing it; most compromised releases are pulled sooner.
+    cooldown: { default-days: 7 }
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      tauri:
+        patterns: ["tauri*"]
+      tokio-axum:
+        patterns: ["tokio*", "axum*", "tower*", "hyper*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    cooldown: { default-days: 7 }
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      tauri:
+        patterns: ["@tauri-apps/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react*"]
+      astro:
+        patterns: ["astro", "@astrojs/*", "prettier-plugin-astro"]
+      lint:
+        patterns: ["eslint*", "@eslint/*", "typescript-eslint", "prettier", "globals"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    cooldown: { default-days: 7 }
+    labels: [dependencies]

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Vainnor/tessera/security/advisories/new
+    about: Report privately. Never open a public issue for a security problem.
+  - name: Questions and design discussion
+    url: https://github.com/Vainnor/tessera/discussions
+    about: Ask questions or discuss the design, including the encryption design.
