@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Scans the staged changes for secrets before they become a commit. CI runs the same scan over
+# the full history (.github/workflows/ci.yml), so a clone without gitleaks is still covered there.
+set -euo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit: gitleaks is not installed; skipping the local secret scan (CI still runs it)." >&2
+    echo "  install: https://github.com/gitleaks/gitleaks#installing" >&2
+    exit 0
+fi
+exec gitleaks git --pre-commit --staged --redact --no-banner --verbose

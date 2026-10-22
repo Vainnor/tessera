@@ -1,0 +1,7 @@
+# Tests may unwrap and index; production code may not (workspace lints in Cargo.toml).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+too-many-arguments-threshold = 7
+doc-valid-idents = ["UniFFI", "PencilKit", "PDFKit", "WebKitGTK", "WebView2", "CRDTs", ".."]
