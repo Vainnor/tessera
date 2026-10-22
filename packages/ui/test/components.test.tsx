@@ -8,7 +8,9 @@ describe("Wordmark", () => {
     const html = renderToStaticMarkup(<Wordmark name="tessera" />);
     expect(html).toContain('role="img"');
     expect(html).toContain('aria-label="Vainnor tessera"');
-    expect(html).toContain('<span class="t-wordmark__mark" aria-hidden="true">^v<span class="t-wordmark__cursor">█</span></span>');
+    expect(html).toContain(
+      '<span class="t-wordmark__mark" aria-hidden="true">^v<span class="t-wordmark__cursor">█</span></span>',
+    );
   });
 
   it("renders the bare mark", () => {

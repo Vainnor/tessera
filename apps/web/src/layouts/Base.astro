@@ -13,7 +13,8 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
-const fullTitle = title === "Tessera" ? "Tessera: local-first markdown notes" : `${title} · Tessera`;
+const fullTitle =
+  title === "Tessera" ? "Tessera: local-first markdown notes" : `${title} · Tessera`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const themeIds = PRESETS.map((theme) => theme.id).join(" ");
 // Mirrors public/_headers. frame-ancestors only works as a header, so it is not repeated here.
@@ -44,25 +45,34 @@ const current = Astro.url.pathname;
     <script src="/theme.js" is:inline></script>
   </head>
   <body>
-    <a class="t-skip-link" href="#main">Skip to content</a>
+    <a class="t-skip-link" href="#main">
+      Skip to content
+    </a>
     <header class="site-header">
       <div class="site-container site-header__inner">
         <a class="t-wordmark" href="/" aria-label="Tessera home">
-          <span class="t-wordmark__mark" aria-hidden="true">^v<span class="t-wordmark__cursor">█</span></span>
-          <span class="t-wordmark__name" aria-hidden="true">tessera</span>
+          <span class="t-wordmark__mark" aria-hidden="true">
+            ^v<span class="t-wordmark__cursor">█</span>
+          </span>
+          <span class="t-wordmark__name" aria-hidden="true">
+            tessera
+          </span>
         </a>
         <nav aria-label="Main">
           <ul class="site-nav">
-            {
-              nav.map((item) => (
-                <li>
-                  <a href={item.href} aria-current={current.startsWith(item.href) ? "page" : undefined}>
-                    {item.label}
-                  </a>
-                </li>
-              ))
-            }
-            <li><a href={REPO_URL}>GitHub</a></li>
+            {nav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  aria-current={current.startsWith(item.href) ? "page" : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href={REPO_URL}>GitHub</a>
+            </li>
           </ul>
         </nav>
       </div>
@@ -77,12 +87,16 @@ const current = Astro.url.pathname;
           <a href="/license/">GNU AGPL v3 or later</a>. This site uses no cookies, analytics or
           third-party requests.
         </p>
-        <p class="t-muted"><a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a></p>
+        <p class="t-muted">
+          <a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a>
+        </p>
         <div class="theme-picker" data-theme-picker-wrap hidden>
           <label for="theme-picker">Theme</label>
           <select id="theme-picker" class="t-select" data-theme-picker>
             <option value="auto">Follow system</option>
-            {PRESETS.map((theme) => <option value={theme.id}>{theme.name}</option>)}
+            {PRESETS.map((theme) => (
+              <option value={theme.id}>{theme.name}</option>
+            ))}
           </select>
         </div>
       </div>

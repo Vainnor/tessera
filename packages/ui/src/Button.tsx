@@ -5,7 +5,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /** A button that defaults to `type="button"`, so it never submits a form by accident. */
-export function Button({ variant = "secondary", className, type = "button", ...rest }: ButtonProps) {
+export function Button({
+  variant = "secondary",
+  className,
+  type = "button",
+  ...rest
+}: ButtonProps) {
   const classes = ["t-button", variant === "primary" ? "t-button--primary" : "", className ?? ""]
     .filter(Boolean)
     .join(" ");

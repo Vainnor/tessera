@@ -17,8 +17,7 @@ export const MAX_THEME_BYTES = 16 * 1024;
 export const BUILT_IN_THEME_IDS = ["vainnor", "light", "dark", "paper", "high-contrast"] as const;
 
 export type ValidationResult =
-  | { ok: true; theme: Theme; contrastWarnings: ContrastResult[] }
-  | { ok: false; errors: string[] };
+  { ok: true; theme: Theme; contrastWarnings: ContrastResult[] } | { ok: false; errors: string[] };
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const ID = /^[a-z0-9-]{1,40}$/;
@@ -55,7 +54,12 @@ function unknownKeys(value: Plain, allowed: readonly string[], at: string): stri
 }
 
 function text(value: unknown, at: string, max: number, errors: string[]): string | undefined {
-  if (typeof value !== "string" || value.length === 0 || value.length > max || CONTROL.test(value)) {
+  if (
+    typeof value !== "string" ||
+    value.length === 0 ||
+    value.length > max ||
+    CONTROL.test(value)
+  ) {
     errors.push(`${at}: must be 1 to ${max} characters with no control characters`);
     return undefined;
   }
@@ -96,7 +100,10 @@ export function validateTheme(
   errors.push(...unknownKeys(value, TOP_LEVEL_KEYS, "theme"));
 
   if (value.schemaVersion !== 1) errors.push("schemaVersion: must be 1");
-  if (value.$schema !== undefined && (typeof value.$schema !== "string" || value.$schema.length > 200)) {
+  if (
+    value.$schema !== undefined &&
+    (typeof value.$schema !== "string" || value.$schema.length > 200)
+  ) {
     errors.push("$schema: must be a string of at most 200 characters");
   }
 
@@ -107,7 +114,9 @@ export function validateTheme(
   }
   const name = text(value.name, "name", 40, errors);
   const description =
-    value.description === undefined ? undefined : text(value.description, "description", 200, errors);
+    value.description === undefined
+      ? undefined
+      : text(value.description, "description", 200, errors);
   if (!isOneOf(MODES, value.mode)) errors.push(`mode: must be one of ${MODES.join(", ")}`);
 
   const colors = {} as Record<ColorRole, string>;
@@ -145,7 +154,8 @@ export function validateTheme(
   if (typeof radius !== "number" || !Number.isInteger(radius) || radius < 0 || radius > 16) {
     errors.push("radius: must be a whole number from 0 to 16");
   }
-  if (!isOneOf(DENSITIES, value.density)) errors.push(`density: must be one of ${DENSITIES.join(", ")}`);
+  if (!isOneOf(DENSITIES, value.density))
+    errors.push(`density: must be one of ${DENSITIES.join(", ")}`);
   if (!isOneOf(ELEVATIONS, value.elevation)) {
     errors.push(`elevation: must be one of ${ELEVATIONS.join(", ")}`);
   }

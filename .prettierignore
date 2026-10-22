@@ -1,0 +1,12 @@
+# Generated, vendored or owned by another formatter
+target/
+**/dist/
+**/.astro/
+**/.lighthouseci/
+pnpm-lock.yaml
+Cargo.lock
+LICENSE
+CODE_OF_CONDUCT.md
+apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/permissions/
+*.rs

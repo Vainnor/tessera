@@ -10,7 +10,7 @@
     "preview": "astro preview --host 127.0.0.1",
     "typecheck": "astro check",
     "test": "vitest run",
-    "lighthouse": "lhci autorun"
+    "lighthouse": "pnpm dlx @lhci/cli@0.15.1 autorun"
   },
   "dependencies": {
     "@vainnor/tessera-theme": "workspace:*",
@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "@lhci/cli": "^0.15.1",
     "@types/node": "^24.19.2",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"

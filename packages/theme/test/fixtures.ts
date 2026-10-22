@@ -27,9 +27,33 @@ export function invalidThemes(): Array<[string, unknown]> {
     ["unknown mode", { ...validUserTheme(), mode: "sepia" }],
     ["radius not an integer", { ...validUserTheme(), radius: 2.5 }],
     ["radius too large", { ...validUserTheme(), radius: 40 }],
-    ["type scale too small", { ...validUserTheme(), typography: { body: "sans", heading: "sans", scale: 0.5, headingCase: "none" } }],
-    ["unknown font", { ...validUserTheme(), typography: { body: "Comic Sans", heading: "sans", scale: 1, headingCase: "none" } }],
-    ["font url smuggled in typography", { ...validUserTheme(), typography: { body: "sans", heading: "sans", scale: 1, headingCase: "none", url: "https://x" } }],
+    [
+      "type scale too small",
+      {
+        ...validUserTheme(),
+        typography: { body: "sans", heading: "sans", scale: 0.5, headingCase: "none" },
+      },
+    ],
+    [
+      "unknown font",
+      {
+        ...validUserTheme(),
+        typography: { body: "Comic Sans", heading: "sans", scale: 1, headingCase: "none" },
+      },
+    ],
+    [
+      "font url smuggled in typography",
+      {
+        ...validUserTheme(),
+        typography: {
+          body: "sans",
+          heading: "sans",
+          scale: 1,
+          headingCase: "none",
+          url: "https://x",
+        },
+      },
+    ],
     ["motion as string", { ...validUserTheme(), motion: "false" }],
   ];
 }

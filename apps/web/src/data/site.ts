@@ -23,17 +23,20 @@ export const FEATURES: readonly Feature[] = [
   },
   {
     title: "Plain markdown files",
-    description: "A vault is a folder of .md files with wikilinks and frontmatter, laid out like Obsidian's.",
+    description:
+      "A vault is a folder of .md files with wikilinks and frontmatter, laid out like Obsidian's.",
     status: "planned",
   },
   {
     title: "Real-time sync",
-    description: "Edits merge across your devices as you type, through a server you can host yourself.",
+    description:
+      "Edits merge across your devices as you type, through a server you can host yourself.",
     status: "planned",
   },
   {
     title: "End-to-end encrypted",
-    description: "The sync server only ever stores ciphertext. The design is published for review before any code.",
+    description:
+      "The sync server only ever stores ciphertext. The design is published for review before any code.",
     status: "planned",
   },
   {
@@ -43,17 +46,20 @@ export const FEATURES: readonly Feature[] = [
   },
   {
     title: "Drawing and handwriting",
-    description: "Sketches, diagrams, handwriting-to-text and PDF annotation, with a native iPad app later.",
+    description:
+      "Sketches, diagrams, handwriting-to-text and PDF annotation, with a native iPad app later.",
     status: "planned",
   },
   {
     title: "Themes",
-    description: "Five built-in themes, including high contrast, and your own themes as small JSON files. This site already uses them.",
+    description:
+      "Five built-in themes, including high contrast, and your own themes as small JSON files. This site already uses them.",
     status: "in-progress",
   },
   {
     title: "Low resource use",
-    description: "Budgets for memory, startup time and download size are set before features are built.",
+    description:
+      "Budgets for memory, startup time and download size are set before features are built.",
     status: "planned",
   },
   {

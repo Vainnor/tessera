@@ -72,7 +72,10 @@ describe("parseTheme", () => {
 
   it("counts bytes, not characters", () => {
     const multibyte = `"${"é".repeat(MAX_THEME_BYTES / 2)}"`;
-    expect(parseTheme(multibyte)).toMatchObject({ ok: false, errors: [expect.stringContaining("limited")] });
+    expect(parseTheme(multibyte)).toMatchObject({
+      ok: false,
+      errors: [expect.stringContaining("limited")],
+    });
   });
 
   it("reports invalid JSON", () => {
@@ -80,7 +83,10 @@ describe("parseTheme", () => {
   });
 
   it("does not let a __proto__ key through", () => {
-    const source = JSON.stringify(validUserTheme()).replace(/^\{/, '{"__proto__":{"polluted":true},');
+    const source = JSON.stringify(validUserTheme()).replace(
+      /^\{/,
+      '{"__proto__":{"polluted":true},',
+    );
     expect(parseTheme(source).ok).toBe(false);
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();
   });

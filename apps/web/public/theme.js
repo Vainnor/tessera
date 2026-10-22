@@ -12,7 +12,7 @@
     try {
       var saved = window.localStorage.getItem(KEY);
       return ids.indexOf(saved) >= 0 ? saved : "auto";
-    } catch (e) {
+    } catch {
       return "auto";
     }
   }
@@ -36,7 +36,7 @@
       try {
         if (choice === "auto") window.localStorage.removeItem(KEY);
         else window.localStorage.setItem(KEY, choice);
-      } catch (e) {
+      } catch {
         // Storage blocked: the theme still applies for this page.
       }
     });

@@ -24,8 +24,7 @@ export function themeVariables(theme: Theme): Record<string, string> {
     "--t-heading-case": theme.typography.headingCase,
     "--t-radius-base": `${theme.radius}px`,
     "--t-density": String(DENSITY_FACTOR[theme.density]),
-    "--t-shadow-1":
-      theme.elevation === "raised" ? `0 1px 2px rgb(0 0 0 / ${shadowAlpha})` : "none",
+    "--t-shadow-1": theme.elevation === "raised" ? `0 1px 2px rgb(0 0 0 / ${shadowAlpha})` : "none",
     "--t-shadow-2":
       theme.elevation === "raised"
         ? `0 4px 12px rgb(0 0 0 / ${shadowAlpha}), 0 1px 3px rgb(0 0 0 / ${shadowAlpha})`
@@ -38,7 +37,10 @@ export function themeVariables(theme: Theme): Record<string, string> {
 /** Tokens every theme shares. They scale with the theme's density, type scale and radius. */
 const SCALE_TOKENS: Record<string, string> = {
   ...Object.fromEntries(
-    [4, 8, 12, 16, 24, 32, 48, 64].map((px, i) => [`--t-space-${i + 1}`, `calc(${px}px * var(--t-density))`]),
+    [4, 8, 12, 16, 24, 32, 48, 64].map((px, i) => [
+      `--t-space-${i + 1}`,
+      `calc(${px}px * var(--t-density))`,
+    ]),
   ),
   ...Object.fromEntries(
     (

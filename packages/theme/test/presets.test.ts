@@ -24,7 +24,9 @@ describe("contrastRatio", () => {
 
 describe("presets", () => {
   it("loads every file in presets/", () => {
-    const files = readdirSync(presetDir).filter((f) => f.endsWith(".json")).sort();
+    const files = readdirSync(presetDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort();
     expect(PRESETS.map((t) => `${t.id}.json`).sort()).toEqual(files);
   });
 
@@ -48,7 +50,9 @@ describe("presets", () => {
     expect(theme).toBeDefined();
     const text = ["text", "textMuted", "accent", "danger", "success", "warning"] as const;
     for (const role of text) {
-      expect(contrastRatio(theme!.colors[role], theme!.colors.background)).toBeGreaterThanOrEqual(7);
+      expect(contrastRatio(theme!.colors[role], theme!.colors.background)).toBeGreaterThanOrEqual(
+        7,
+      );
     }
   });
 

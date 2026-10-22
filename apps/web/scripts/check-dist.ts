@@ -33,7 +33,9 @@ for (const file of html) {
     if (!glued.includes("t-wordmark__cursor")) problems.push(`${at}: no space before ${glued}`);
   }
   // Resources (not links) must be same-origin.
-  for (const match of page.matchAll(/<(?:script|link|img|source|iframe|video|audio)\b[^>]*\b(?:src|href)="(https?:)?\/\/[^"]+"/gi)) {
+  for (const match of page.matchAll(
+    /<(?:script|link|img|source|iframe|video|audio)\b[^>]*\b(?:src|href)="(https?:)?\/\/[^"]+"/gi,
+  )) {
     if (!/rel="canonical"/.test(match[0])) problems.push(`${at}: third-party resource ${match[0]}`);
   }
 }

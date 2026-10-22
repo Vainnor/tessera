@@ -7,7 +7,7 @@ third-party requests of any kind.
 ```sh
 pnpm dev:web                                  # from the repo root: builds tokens, then serves on 127.0.0.1:4321
 pnpm --filter @vainnor/tessera-web build      # astro check + astro build + scripts/check-dist.ts
-pnpm --filter @vainnor/tessera-web lighthouse # Lighthouse CI budget against dist/ (needs Chrome)
+pnpm --filter @vainnor/tessera-web lighthouse # Lighthouse CI budget against dist/ (needs Chrome; runs a pinned @lhci/cli via pnpm dlx)
 ```
 
 ## Guards
