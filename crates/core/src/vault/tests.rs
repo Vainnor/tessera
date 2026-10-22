@@ -614,6 +614,27 @@ fn case_only_rename_never_replaces_a_differently_cased_note() {
     assert_eq!(vault.read("plan.md"), "lower");
 }
 
+/// The Kelvin sign (U+212A) lowercases to `k` in Unicode, but NTFS keeps it apart from `K`, so a
+/// string comparison would call this a case-only rename and replace `K.md` there. Whatever the
+/// filesystem decides, no note may be lost.
+#[test]
+fn rename_never_loses_a_note_to_unicode_case_folding() {
+    let vault = TempVault::new();
+    vault.file("\u{212A}.md", "kelvin").file("K.md", "upper");
+    if vault.names_in("").len() < 2 {
+        return;
+    }
+    let opened = vault.open();
+    let revision = revision_of(&opened, "\u{212A}.md");
+    let result = opened.move_note(&path("\u{212A}.md"), &path("k.md"), revision);
+    assert!(
+        matches!(result, Ok(_) | Err(Error::NoteExists)),
+        "{result:?}"
+    );
+    assert_eq!(vault.read("K.md"), "upper");
+    assert_eq!(vault.names_in("").len(), 2);
+}
+
 #[test]
 fn move_to_the_same_path_changes_nothing() {
     let vault = TempVault::new();
