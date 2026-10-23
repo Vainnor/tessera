@@ -9,6 +9,8 @@ mod settings;
 
 /// Builds and runs the app until the last window closes.
 pub fn run() {
+    // Before anything can panic: the default hook prints panic messages, which can quote notes.
+    tessera_core::install_panic_hook();
     let result = tauri::Builder::default()
         // Registered for the Rust-side folder picker only. The capability grants no `dialog:`
         // permission, so the plugin's own JavaScript commands are refused.

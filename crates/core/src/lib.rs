@@ -27,10 +27,12 @@
 pub mod crypto;
 pub mod document;
 mod error;
+mod panic_hook;
 pub mod sync;
 pub mod vault;
 
 pub use error::Error;
+pub use panic_hook::install_panic_hook;
 
 /// The version of this crate, for "about" screens and the sync handshake.
 #[must_use]

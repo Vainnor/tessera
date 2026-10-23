@@ -55,6 +55,8 @@ tessera/
   which calls Tauri commands in `src-tauri/src/commands.rs`; each command is a few lines over
   `tessera-core`. The capability in `src-tauri/capabilities/main.json` grants commands by name and
   nothing else.
+- **Panics.** Every app calls `tessera_core::install_panic_hook()` before anything else, the
+  iPad app included: the default hook prints panic messages, which can quote notes.
 - **iPad, later.** A native Swift app links `tessera-core` through UniFFI-generated bindings and
   uses PencilKit and PDFKit for ink and PDFs. The core's public API already follows UniFFI's rules
   (see the crate docs in `crates/core/src/lib.rs`), so the bindings are generated rather than

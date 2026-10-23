@@ -12,6 +12,8 @@ const USAGE: &str = "usage: tessera-server [--config <path>]\n\n\
 
 #[tokio::main]
 async fn main() -> ExitCode {
+    // The default hook prints panic messages, which can quote request data.
+    tessera_core::install_panic_hook();
     match run().await {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
