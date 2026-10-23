@@ -112,7 +112,7 @@ whatever the CRDT emits ([threat model](threat-model.md)).
 `.github/workflows/images.yml` builds two images and pushes them to `ghcr.io/vainnor`:
 
 ```
-CI green on main ──> tessera-web:<version>-<sha7>, :main ──> retag :prod ──> homelab pulls :prod
+CI green on main ──> tessera-web:<version>-<sha7>, :main ──> retag :prod ──> dispatch to homelab-infra
                  └─> tessera-server:<version>-<sha7>, :main   (built, not deployed)
 tag v<version>   ──> both images :<version>, :latest
 pull request     ──> both images built, nothing pushed
@@ -123,6 +123,11 @@ build served by Caddy (`apps/web/Caddyfile`) on :8080, unprivileged, with the sa
 `public/_headers`. The server image is the release binary on distroless with
 `crates/server/container.toml`, which binds 0.0.0.0:8787 inside the container. TLS terminates at
 the homelab's reverse proxy for both.
+
+After promoting `prod`, `images.yml` sends a `repository_dispatch` (type `tessera-web-image`,
+payload `{tag, sha}`) to Vainnor/homelab-infra with `HOMELAB_DEPLOY_TOKEN`. That repository's
+`tessera-deploy.yml` resolves the tag to a digest, commits the pin, and Argo CD deploys it. The
+homelab never reads `prod`.
 
 ## Dependencies
 

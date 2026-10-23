@@ -36,8 +36,9 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop=ALL -p 127.0.0.1:8080:8080 t
 ```
 
 When CI passes on main, `.github/workflows/images.yml` pushes
-`ghcr.io/vainnor/tessera-web:<version>-<sha7>` and moves the `prod` tag to it; the homelab
-deploys `prod`.
+`ghcr.io/vainnor/tessera-web:<version>-<sha7>`, moves the `prod` tag to it, and dispatches
+that tag to Vainnor/homelab-infra, which pins its digest and deploys it
+([architecture](../../docs/architecture.md#container-images)).
 
 The privacy page says the host's access-log retention is still to be confirmed; update it when
 hosting is chosen.

@@ -4,7 +4,7 @@ name: Images
 #
 # - Pull requests build every image and push nothing.
 # - When CI passes on main, every image is pushed as <version>-<short sha> and `main`, and the
-#   website's image is promoted to `prod`, which the homelab deploys.
+#   website's image is promoted to `prod`, and the homelab is told to deploy that build.
 # - A `v<version>` tag pushes <version> and `latest`. It does not deploy.
 #
 # <version> is [workspace.package] version in Cargo.toml. Waiting for CI keeps a red main out of
@@ -205,15 +205,29 @@ jobs:
         run: |
           docker buildx imagetools create --tag "$IMAGE:prod" "$IMAGE:$VERSION"
           echo "Promoted $IMAGE:$VERSION to prod" >> "$GITHUB_STEP_SUMMARY"
-      # Optional: a homelab that pulls `prod` on its own needs nothing here. One that redeploys on
-      # a webhook (Portainer, Komodo, Coolify) gets its URL from this environment secret.
-      - name: Notify the deploy hook
+      # Tells the homelab which build to deploy. Vainnor/homelab-infra's tessera-deploy.yml takes
+      # only the tag and the commit from this, resolves the tag to a digest in GHCR itself, and
+      # commits the pin; Argo CD rolls it out. The tag sent is the immutable <version>-<sha7>, not
+      # `prod`, so the homelab's git history names the build it runs.
+      #
+      # HOMELAB_DEPLOY_TOKEN is a fine-grained token for Vainnor/homelab-infra only, with Contents
+      # read and write: the narrowest permission that can send a repository_dispatch.
+      - name: Tell the homelab to deploy
         if: steps.tip.outputs.current == 'true'
         env:
-          HOOK: ${{ secrets.WEB_DEPLOY_WEBHOOK_URL }}
+          GH_TOKEN: ${{ secrets.HOMELAB_DEPLOY_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+          SHA: ${{ needs.version.outputs.sha }}
         run: |
-          if [ -z "$HOOK" ]; then
-            echo "No WEB_DEPLOY_WEBHOOK_URL; the host pulls prod itself"
-            exit 0
+          set -euo pipefail
+          # An unset secret expands to an empty string, and gh then fails with an error that
+          # points at authentication rather than at the missing secret.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::HOMELAB_DEPLOY_TOKEN is not set, so the homelab was not told to deploy. prod was promoted; only the deploy trigger was skipped."
+            exit 1
           fi
-          curl -fsS --max-time 60 -X POST "$HOOK" -o /dev/null
+          gh api --method POST repos/Vainnor/homelab-infra/dispatches \
+            -f event_type=tessera-web-image \
+            -F "client_payload[tag]=$VERSION" \
+            -F "client_payload[sha]=$SHA"
+          echo "Dispatched tessera-web-image -> $VERSION" >> "$GITHUB_STEP_SUMMARY"
