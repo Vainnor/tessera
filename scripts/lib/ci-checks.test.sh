@@ -45,17 +45,35 @@ sort -o "$WORK/want" "$WORK/want"
 if [[ -s "$WORK/want" ]] && cmp -s "$WORK/want" "$WORK/have"; then ok "CI_REQUIRED_CHECKS matches ci.yml ($(wc -l <"$WORK/want" | tr -d ' ') jobs)"; else bad "drift: $(diff "$WORK/want" "$WORK/have" | tr '\n' ' ')"; fi
 
 echo "The hook tests run in CI:"
-# The runs-on of every job with a `bash scripts/test-hooks.sh` step: want exactly one, on Linux.
-hook_jobs="$(python3 -I - "$ROOT/.github/workflows/ci.yml" <<'PY2'
+# One line per fact about each job with a `bash scripts/test-hooks.sh` step, plus the workflow's
+# top-level permissions. Two such jobs repeat the job lines, so the exact match below fails.
+hook_job="$(python3 -I - "$ROOT/.github/workflows/ci.yml" <<'PY2'
 import re, sys
-jobs = open(sys.argv[1]).read().split("\njobs:\n", 1)[1]
-for block in re.split(r"\n(?=  [a-z][a-z0-9-]*:\n)", "\n" + jobs):
-    if re.search(r"^      - run: bash scripts/test-hooks\.sh$", block, re.M):
-        m = re.search(r"^    runs-on: (.+)$", block, re.M)
-        print(m.group(1).strip() if m else "(no runs-on)")
+head, jobs = open(sys.argv[1]).read().split("\njobs:\n", 1)
+print("top permissions: " + ("{}" if re.search(r"^permissions: \{\}$", head, re.M) else "not {}"))
+for block in re.split(r"\n(?=  [a-z][a-z0-9-]*:\n)", "\n" + jobs + "\n"):
+    if not re.search(r"^      - run: bash scripts/test-hooks\.sh$", block, re.M):
+        continue
+    m = re.search(r"^    runs-on: (.+)$", block, re.M)
+    print("runs-on: " + (m.group(1).strip() if m else "none"))
+    m = re.search(r"^    permissions:\n((?:      .+\n)*)", block, re.M)
+    print("permissions: " + (" ".join(m.group(1).split()) if m else "none"))
+    for uses in re.findall(r"^ +(?:- )?uses: (.+)$", block, re.M):
+        pinned = re.fullmatch(r"[\w.-]+/[\w.-]+@[0-9a-f]{40} # v[0-9][\w.]*", uses.strip())
+        print(("pinned: " if pinned else "not pinned: ") + uses.split("@")[0])
+    print("persist-credentials: " + ("false" if re.search(r"^ +persist-credentials: false$", block, re.M) else "not false"))
+    # Either key would let the job pass while the tests fail, or skip it.
+    for key in ("if", "continue-on-error"):
+        if re.search(r"^ +(?:- )?" + key + r":", block, re.M):
+            print("has " + key)
 PY2
 )"
-if [[ "$hook_jobs" == "ubuntu-24.04" ]]; then ok "one job runs bash scripts/test-hooks.sh, on ubuntu-24.04"; else bad "jobs running the hook tests, by runs-on: '$hook_jobs'"; fi
+want_ac1='runs-on: ubuntu-24.04'
+want_ac2=$'top permissions: {}\npermissions: contents: read\npinned: actions/checkout\npersist-credentials: false'
+got_ac1="$(printf '%s\n' "$hook_job" | grep -E '^(runs-on:|has) ')"
+got_ac2="$(printf '%s\n' "$hook_job" | grep -Ev '^(runs-on:|has) ')"
+if [[ "$got_ac1" == "$want_ac1" ]]; then ok "one job runs bash scripts/test-hooks.sh, on ubuntu-24.04, with no if or continue-on-error"; else bad "hook-tests job: $(printf '%s' "$hook_job" | tr '\n' ';')"; fi
+if [[ "$got_ac2" == "$want_ac2" ]]; then ok "that job reads contents only, under permissions: {}, with a SHA-pinned checkout that keeps no credentials"; else bad "hook-tests job: $(printf '%s' "$hook_job" | tr '\n' ';')"; fi
 
 echo "Only GitHub Actions' check-runs count:"
 if command -v jq >/dev/null 2>&1; then
