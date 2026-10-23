@@ -3,11 +3,31 @@ import { describe, expect, it } from "vitest";
 
 const headers = readFileSync(new URL("../public/_headers", import.meta.url), "utf8");
 const layout = readFileSync(new URL("../src/layouts/Base.astro", import.meta.url), "utf8");
+const caddyfile = readFileSync(new URL("../Caddyfile", import.meta.url), "utf8");
 
 function header(name: string): string {
   const line = headers.split("\n").find((l) => l.trim().startsWith(`${name}:`));
   if (!line) throw new Error(`missing header ${name}`);
   return line.slice(line.indexOf(":") + 1).trim();
+}
+
+/** Every `Name: value` header in public/_headers, across all its path blocks. */
+function allHeaders(): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const line of headers.split("\n")) {
+    const match = /^\s+([\w-]+):\s*(.+)$/.exec(line);
+    if (match?.[1] && match[2]) out.set(match[1], match[2].trim());
+  }
+  return out;
+}
+
+/** Every `Name "value"` header the Caddyfile sets, inside a header block or on one line. */
+function caddyHeaders(): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const match of caddyfile.matchAll(/^\s*(?:header\s+\S+\s+)?([\w-]+)\s+"([^"]*)"\s*$/gm)) {
+    if (match[1] && match[2] !== undefined) out.set(match[1], match[2]);
+  }
+  return out;
 }
 
 /** The CSP string concatenated in Base.astro's frontmatter. */
@@ -50,5 +70,9 @@ describe("security headers", () => {
     for (const feature of ["camera", "microphone", "geolocation", "browsing-topics"]) {
       expect(header("Permissions-Policy")).toContain(`${feature}=()`);
     }
+  });
+
+  it("sends the same headers from the container's Caddyfile as from public/_headers", () => {
+    expect(caddyHeaders()).toEqual(allHeaders());
   });
 });

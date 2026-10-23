@@ -24,34 +24,20 @@ pnpm --filter @vainnor/tessera-web lighthouse # Lighthouse CI budget against dis
 
 ## Hosting
 
-Not decided yet. `public/_headers` works as-is on Cloudflare Pages and Netlify. For Caddy:
+The site runs as a container on the maintainer's homelab, behind its TLS-terminating reverse
+proxy. `Dockerfile` builds the site and serves `dist/` with Caddy on :8080 as an unprivileged
+user; `Caddyfile` sets the same headers as `public/_headers` and writes no access log.
+`test/headers.test.ts` keeps the two in step. `public/_headers` still works as-is on Cloudflare
+Pages and Netlify.
 
-```caddy
-tessera.vainnor.com {
-	root * /srv/tessera-web
-	file_server
-	header {
-		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
-		Strict-Transport-Security "max-age=63072000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
-		Referrer-Policy "no-referrer"
-		Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), browsing-topics=()"
-		Cross-Origin-Opener-Policy "same-origin"
-		Cross-Origin-Resource-Policy "same-origin"
-		Cross-Origin-Embedder-Policy "require-corp"
-		-Server
-	}
-	@assets path /_astro/*
-	header @assets Cache-Control "public, max-age=31536000, immutable"
-	# Access logs: keep them short-lived and say so on /privacy/ before launch.
-	log {
-		output file /var/log/caddy/tessera-web.log {
-			roll_keep_for 168h
-		}
-	}
-}
+```sh
+docker build -f apps/web/Dockerfile -t tessera-web .   # from the repo root
+docker run --rm --read-only --tmpfs /tmp --cap-drop=ALL -p 127.0.0.1:8080:8080 tessera-web
 ```
+
+When CI passes on main, `.github/workflows/images.yml` pushes
+`ghcr.io/vainnor/tessera-web:<version>-<sha7>` and moves the `prod` tag to it; the homelab
+deploys `prod`.
 
 The privacy page says the host's access-log retention is still to be confirmed; update it when
 hosting is chosen.

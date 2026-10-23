@@ -35,6 +35,9 @@ pnpm dev:web                          # website at http://localhost:4321
 cargo run -p tessera-server           # sync server skeleton: http://127.0.0.1:8787/healthz
 
 pnpm gate                             # everything CI checks, locally
+
+docker build -f apps/web/Dockerfile .      # website image (Caddy on :8080)
+docker build -f crates/server/Dockerfile . # sync server image (:8787)
 ```
 
 The server reads `--config <file>` or `$TESSERA_SERVER_CONFIG`; see

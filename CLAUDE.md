@@ -101,6 +101,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 cargo deny --locked check && cargo audit
 pnpm --filter @vainnor/tessera-web lighthouse   # Lighthouse budgets (needs Chrome)
+docker build -f apps/web/Dockerfile .           # website image; crates/server/Dockerfile for the server
 ```
 
 ## Quality gate

@@ -27,6 +27,11 @@ updates:
         patterns: ["astro", "@astrojs/*", "prettier-plugin-astro"]
       lint:
         patterns: ["eslint*", "@eslint/*", "typescript-eslint", "prettier", "globals"]
+  - package-ecosystem: docker
+    directories: ["/apps/web", "/crates/server"]
+    schedule: { interval: weekly }
+    cooldown: { default-days: 7 }
+    labels: [dependencies]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }

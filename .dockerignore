@@ -1,0 +1,15 @@
+# Build contexts are the repo root. Send only sources: no local builds, dependencies, git
+# history or secrets.
+.git
+**/node_modules
+**/dist
+**/.astro
+target
+.lighthouseci
+coverage
+.env
+.env.*
+**/*.pem
+**/*.key
+.claude
+vaults

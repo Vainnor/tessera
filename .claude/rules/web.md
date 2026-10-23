@@ -11,8 +11,8 @@ paths:
 - CSP: same-origin scripts and styles only, `connect-src 'none'`. `inlineStylesheets: "never"`
   and `compressHTML: false` in `astro.config.mjs` are load-bearing; `scripts/check-dist.ts` fails
   the build if inline code, a third-party resource or glued inline text appears.
-- The CSP and headers live in two places that must match: `public/_headers` and the meta tag in
-  `src/layouts/Base.astro`. `test/headers.test.ts` enforces it.
+- The CSP and headers live in three places that must match: `public/_headers`, the meta tag in
+  `src/layouts/Base.astro` and the container's `Caddyfile`. `test/headers.test.ts` enforces it.
 - No third-party fonts, images, embeds or badges. Link to GitHub; never load from it.
 - Styling uses tokens and the `@vainnor/tessera-ui` classes (`theming.md`).
 

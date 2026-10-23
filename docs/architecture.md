@@ -101,6 +101,23 @@ updates batch and encrypt as opaque blobs, compaction of history without the ser
 a Rust implementation usable from the core without a JS runtime. The encryption layer wraps
 whatever the CRDT emits ([threat model](threat-model.md)).
 
+## Container images
+
+`.github/workflows/images.yml` builds two images and pushes them to `ghcr.io/vainnor`:
+
+```
+CI green on main ──> tessera-web:<version>-<sha7>, :main ──> retag :prod ──> homelab pulls :prod
+                 └─> tessera-server:<version>-<sha7>, :main   (built, not deployed)
+tag v<version>   ──> both images :<version>, :latest
+pull request     ──> both images built, nothing pushed
+```
+
+`<version>` is `[workspace.package] version` in `Cargo.toml`. The website image is the static
+build served by Caddy (`apps/web/Caddyfile`) on :8080, unprivileged, with the same headers as
+`public/_headers`. The server image is the release binary on distroless with
+`crates/server/container.toml`, which binds 0.0.0.0:8787 inside the container. TLS terminates at
+the homelab's reverse proxy for both.
+
 ## Dependencies
 
 The list, with the reason for each, is [ADR 0001](adr/0001-repository-and-stack.md#dependencies).

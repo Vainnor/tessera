@@ -1,0 +1,11 @@
+# tessera-server config baked into the container image (crates/server/Dockerfile). Mount another
+# file over /etc/tessera/server.toml to change it.
+
+# 0.0.0.0 inside the container's own network namespace. What is reachable from outside is
+# decided by the published port; publish it on loopback or a private network behind a
+# TLS-terminating reverse proxy, never directly to the internet.
+bind = "0.0.0.0:8787"
+
+[log]
+format = "json"
+filter = "info"

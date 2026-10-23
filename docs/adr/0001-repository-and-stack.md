@@ -66,6 +66,18 @@ Each one is here because nothing smaller does the job. The policy for adding mor
 | `@types/node`, `@types/react`, `@types/react-dom`                                   | dev             | Types                                                                                                                                                            |
 | `@lhci/cli` (not a dependency)                                                      | CI tool         | Lighthouse budget. Run pinned through `pnpm dlx`: its puppeteer tree has unpatched advisories, so it stays out of the lockfile and `pnpm audit` stays meaningful |
 
+### Container images and actions
+
+| Image or action                                                                      | Used by         | Why                                                                                       |
+| ------------------------------------------------------------------------------------ | --------------- | ----------------------------------------------------------------------------------------- |
+| `node` (alpine)                                                                      | web image build | Builds the site; same Node major as CI                                                    |
+| `caddy` (alpine), `alpine`                                                           | web image       | Static file server with the headers in `apps/web/Caddyfile`; Apache-2.0, no modules added |
+| `rust` (slim-bookworm)                                                               | server image    | Builds the server with the toolchain `rust-toolchain.toml` pins                           |
+| `gcr.io/distroless/cc-debian12` (nonroot)                                            | server image    | Runtime with libc and nothing else: no shell, no package manager                          |
+| `docker/setup-buildx-action`, `login-action`, `metadata-action`, `build-push-action` | `images.yml`    | Docker's own actions for multi-platform builds, tags, provenance and SBOM attestations    |
+
+Base images are pinned by digest and actions by commit SHA; Dependabot proposes updates to both.
+
 `eslint-plugin-jsx-a11y` was considered and left out: it has not had a release since 2024 and does
 not declare ESLint 10 support. Accessibility is enforced by Lighthouse on the website for now;
 component-level checks for the desktop app are a follow-up.
