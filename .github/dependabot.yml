@@ -32,6 +32,11 @@ updates:
     schedule: { interval: weekly }
     cooldown: { default-days: 7 }
     labels: [dependencies]
+    ignore:
+      # The image builds with the Node major CI uses (NODE_VERSION in ci.yml); move both together.
+      # Node 26 also drops corepack, which the web Dockerfile uses to install pnpm.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
