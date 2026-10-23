@@ -20,6 +20,9 @@
 //! module, never in Automerge's internal queue, and is checked by itself when they do, so a
 //! refusal names the change that caused it.
 //!
+//! Caught panics still reach the process's panic hook, so every app installs
+//! [`crate::install_panic_hook`] first, which prints no message.
+//!
 //! Not covered yet, and required before sync ships (ADR 0003):
 //!
 //! - A change's columns are run-length encoded, so 135 bytes can declare any number of
@@ -29,10 +32,10 @@
 //! - Memory: about 455 bytes per operation were measured at 1.9 million operations, so a history
 //!   at [`MAX_HISTORY_OPS`] holds roughly 230 MB in Automerge, plus about 20 MB of element index
 //!   and up to 10 MB of vector clocks. The caps apply per history, not across all open notes.
-//! - Changes from elsewhere apply one `apply_changes` call at a time, and each call costs time
-//!   that grows with the history (about 2.8 ms each at 20,000 changes), so a backlog takes
-//!   quadratic time. [`MAX_HISTORY_CHANGES`] bounds it; applying a ready set in one call would
-//!   remove it.
+//! - Each call to [`NoteHistory::apply_change`] makes one Automerge `apply_changes` call (for the
+//!   change and every waiting change it releases), and each call costs time that grows with the
+//!   history (about 2.8 ms at 20,000 changes). A sync layer that hands over changes one by one
+//!   still pays that per change; [`MAX_HISTORY_CHANGES`] bounds it.
 //! - A change that still makes Automerge panic marks the history failed; after it is loaded
 //!   again, the sync layer must not deliver that change again. The sync layer is not built.
 //! - An author who sends different changes with the same sequence number to different devices
@@ -41,8 +44,6 @@
 //!   accept their own change and refuse the other's, and then show different text. Judging a
 //!   change by its causal past would give every device the same answer. With no history reset
 //!   either, this module must not be wired into the app yet.
-//! - Caught panics still reach the default panic hook. A hook that prints no payload must be
-//!   installed before the shell first applies a change from another device.
 
 use std::collections::{HashMap, HashSet};
 use std::fmt;
@@ -76,6 +77,10 @@ pub const MAX_HISTORY_OPS: u64 = 500_000;
 pub const MAX_HISTORY_CHANGES: u64 = 20_000;
 /// The most devices whose changes one history may hold, which bounds the per-change index.
 pub const MAX_HISTORY_AUTHORS: u64 = 64;
+// Every insert adds at most four bytes of text and one operation, so the operation cap keeps
+// the text under the note limit, which `text_bytes` relies on.
+const _: () = assert!(MAX_HISTORY_OPS * 4 <= MAX_NOTE_BYTES);
+
 /// The most bytes of changes one history may hold, and the largest saved history accepted on load.
 pub const MAX_SAVED_BYTES: u64 = 256 * 1024 * 1024;
 /// The most changes that may wait for their dependencies in one history.
@@ -397,8 +402,10 @@ impl NoteHistory {
     /// [`Error::SyncDataRefused`] if any check in the module documentation fails, if too many
     /// changes are waiting ([`MAX_PENDING_CHANGES`], [`MAX_PENDING_PER_AUTHOR`]), if it claims to
     /// come from this device, takes the history past [`MAX_HISTORY_OPS`], or was refused before.
-    /// The history is unchanged after any of these. If applying still fails, or a waiting change
-    /// it released does, the history is marked failed and this returns that failure.
+    /// The history is unchanged after any of these. [`Error::NoteTooLarge`] is a backstop: the
+    /// operation cap keeps the text under the limit. If Automerge still refuses or panics on the
+    /// change and the waiting changes it released, which go to it together, the history is marked
+    /// failed and this returns that failure without saying which change caused it.
     pub fn apply_change(&self, change: Vec<u8>, author: DeviceId) -> Result<Applied, Error> {
         let (parsed, expanded) = parse_change(change, author)?;
         let mut state = self.lock()?;
@@ -444,17 +451,14 @@ impl NoteHistory {
                 refused_later: std::mem::take(&mut state.unreported),
             });
         }
-        if let Err(error) = state.integrate(&checked, Some(&expanded)) {
-            if !state.failed {
-                state.refuse_on_arrival(&checked.change, author, &error);
-            }
+        let mut batch = Vec::new();
+        if let Err(error) = state.admit(&checked, Some(&expanded), &mut batch) {
+            state.refuse_on_arrival(&checked.change, author, &error);
             return Err(error);
         }
         let mut refused_later = std::mem::take(&mut state.unreported);
-        refused_later.extend(state.release(hash));
-        if state.failed {
-            return Err(failed());
-        }
+        refused_later.extend(state.release(hash, &mut batch));
+        state.apply_batch(batch)?;
         Ok(Applied {
             applied: true,
             refused_later,
@@ -835,12 +839,14 @@ impl State {
         Some(checked)
     }
 
-    /// Applies a checked change whose dependencies are in the history, in place. Every check runs
-    /// before Automerge sees the change; if applying still fails, the history is marked failed.
-    fn integrate(
+    /// Runs every check that needs `checked`'s dependencies, then indexes it and adds it to
+    /// `batch` for [`State::apply_batch`]. The indexes run ahead of the document until the batch
+    /// is applied, so later changes in the batch are checked against this one.
+    fn admit(
         &mut self,
         checked: &Checked,
         expanded: Option<&ExpandedChange>,
+        batch: &mut Vec<Change>,
     ) -> Result<(), Error> {
         let change = &checked.change;
         if !self.follows_its_author(change) {
@@ -870,12 +876,9 @@ impl State {
             });
         }
         if self.text_bytes + checked.inserted_bytes > MAX_NOTE_BYTES {
-            self.text_bytes = self.markdown()?.len() as u64;
-            if self.text_bytes + checked.inserted_bytes > MAX_NOTE_BYTES {
-                return Err(Error::NoteTooLarge {
-                    limit_bytes: MAX_NOTE_BYTES,
-                });
-            }
+            return Err(Error::NoteTooLarge {
+                limit_bytes: MAX_NOTE_BYTES,
+            });
         }
         let decoded;
         let expanded = if let Some(expanded) = expanded {
@@ -885,23 +888,31 @@ impl State {
             &decoded
         };
         self.check_references(change, expanded)?;
-        let applied = self.guarded_mut(|state| state.doc.apply_changes([change.clone()]))?;
+        self.record(change, expanded)?;
+        self.text_bytes += checked.inserted_bytes;
+        batch.push(change.clone());
+        Ok(())
+    }
+
+    /// Gives Automerge every admitted change in one call: applying them one call at a time costs
+    /// time that grows with the history for each. If Automerge still refuses or panics, the
+    /// indexes no longer match the document, so the history is marked failed.
+    fn apply_batch(&mut self, batch: Vec<Change>) -> Result<(), Error> {
+        if batch.is_empty() {
+            return Ok(());
+        }
+        let applied = self.guarded_mut(|state| state.doc.apply_changes(batch))?;
         if applied.is_err() {
             self.failed = true;
-            return Err(refused("the change does not apply"));
+            return Err(failed());
         }
-        if let Err(error) = self.record(change, expanded) {
-            self.failed = true;
-            return Err(error);
-        }
-        self.text_bytes += checked.inserted_bytes;
         Ok(())
     }
 
     /// Applies every waiting change that `arrived` makes ready, and the ones those make ready in
     /// turn. A refused change is reported with its author, and so is every waiting change that
     /// depends on it.
-    fn release(&mut self, arrived: ChangeHash) -> Vec<RefusedChange> {
+    fn release(&mut self, arrived: ChangeHash, batch: &mut Vec<Change>) -> Vec<RefusedChange> {
         let mut refused_later = Vec::new();
         let mut arrivals = vec![arrived];
         while let Some(hash) = arrivals.pop() {
@@ -916,7 +927,7 @@ impl State {
                 let Some(checked) = self.unhold(&waiting) else {
                     continue;
                 };
-                match self.integrate(&checked, None) {
+                match self.admit(&checked, None, batch) {
                     Ok(()) => arrivals.push(waiting),
                     Err(error) => self.refuse(
                         &checked.change,
@@ -924,9 +935,6 @@ impl State {
                         &error.to_string(),
                         &mut refused_later,
                     ),
-                }
-                if self.failed {
-                    return refused_later;
                 }
             }
         }
