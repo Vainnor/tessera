@@ -2,7 +2,9 @@
 # ==============================================================================
 # Tests for scripts/lib/ci-checks.sh: that its required checks are exactly the jobs
 # in .github/workflows/ci.yml, that its jq filter keeps only GitHub Actions' runs,
-# and that a malformed sha never reaches gh.
+# and that a malformed sha never reaches gh. Also checks the shape of the ci.yml job
+# that runs the hook tests: its runner, timeout, permissions, action pins and
+# credentials, and that no if or continue-on-error lets it skip or pass on failure.
 #
 #   bash scripts/lib/ci-checks.test.sh
 #
@@ -56,6 +58,8 @@ for block in re.split(r"\n(?=  [a-z][a-z0-9-]*:\n)", "\n" + jobs + "\n"):
         continue
     m = re.search(r"^    runs-on: (.+)$", block, re.M)
     print("runs-on: " + (m.group(1).strip() if m else "none"))
+    m = re.search(r"^    timeout-minutes: (.+)$", block, re.M)
+    print("timeout-minutes: " + (m.group(1).strip() if m else "none"))
     m = re.search(r"^    permissions:\n((?:      .+\n)*)", block, re.M)
     print("permissions: " + (" ".join(m.group(1).split()) if m else "none"))
     for uses in re.findall(r"^ +(?:- )?uses: (.+)$", block, re.M):
@@ -68,11 +72,11 @@ for block in re.split(r"\n(?=  [a-z][a-z0-9-]*:\n)", "\n" + jobs + "\n"):
             print("has " + key)
 PY2
 )"
-want_ac1='runs-on: ubuntu-24.04'
+want_ac1=$'runs-on: ubuntu-24.04\ntimeout-minutes: 25'
 want_ac2=$'top permissions: {}\npermissions: contents: read\npinned: actions/checkout\npersist-credentials: false'
-got_ac1="$(printf '%s\n' "$hook_job" | grep -E '^(runs-on:|has) ')"
-got_ac2="$(printf '%s\n' "$hook_job" | grep -Ev '^(runs-on:|has) ')"
-if [[ "$got_ac1" == "$want_ac1" ]]; then ok "one job runs bash scripts/test-hooks.sh, on ubuntu-24.04, with no if or continue-on-error"; else bad "hook-tests job: $(printf '%s' "$hook_job" | tr '\n' ';')"; fi
+got_ac1="$(printf '%s\n' "$hook_job" | grep -E '^(runs-on:|timeout-minutes:|has) ')"
+got_ac2="$(printf '%s\n' "$hook_job" | grep -Ev '^(runs-on:|timeout-minutes:|has) ')"
+if [[ "$got_ac1" == "$want_ac1" ]]; then ok "one job runs bash scripts/test-hooks.sh, on ubuntu-24.04 with a 25-minute timeout and no if or continue-on-error"; else bad "hook-tests job: $(printf '%s' "$hook_job" | tr '\n' ';')"; fi
 if [[ "$got_ac2" == "$want_ac2" ]]; then ok "that job reads contents only, under permissions: {}, with a SHA-pinned checkout that keeps no credentials"; else bad "hook-tests job: $(printf '%s' "$hook_job" | tr '\n' ';')"; fi
 
 echo "Only GitHub Actions' check-runs count:"
