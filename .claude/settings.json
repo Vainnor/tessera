@@ -49,13 +49,11 @@
       "Bash(bash scripts/review-marker.sh:*)",
       "Bash(bash scripts/lib/review-attestation.sh:*)",
       "Bash(bash scripts/test-hooks.sh:*)",
-      "Bash(bash scripts/lib/:*)",
       "Bash(git worktree list:*)",
       "Bash(git ls-remote:*)",
       "Bash(gh issue list:*)",
       "Bash(gh pr list:*)",
-      "Bash(gh pr checks:*)",
-      "Bash(bash scripts/mutate.sh:*)"
+      "Bash(gh pr checks:*)"
     ],
     "ask": [
       "Bash(git push:*)",

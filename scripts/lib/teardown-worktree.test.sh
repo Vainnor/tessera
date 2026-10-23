@@ -169,6 +169,14 @@ git -C "$MAIN" worktree lock --reason "held by hand" "$WT"
 teardown "$NAME"
 has "a lock naming no process blocks" "locked with no owning process"
 
+setup outside-root; push_branch
+OUTSIDE="$WORK/outside-root/elsewhere"
+git -C "$MAIN" worktree add -q -b "feat/2/outside" "$OUTSIDE" main
+printf 'vault\n' > "$OUTSIDE/notes.md"
+teardown "$OUTSIDE"
+has "a worktree outside .claude/worktrees is refused" "is not under .claude/worktrees/"
+if [[ -f "$OUTSIDE/notes.md" ]]; then ok "...and its files stay"; else bad "...and its files stay: $OUT"; fi
+
 echo
 echo "teardown-worktree: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

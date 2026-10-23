@@ -15,7 +15,12 @@ command -v python3 >/dev/null 2>&1 || { echo "test-hooks: python3 is required" >
 
 if [[ $# -gt 0 ]]; then
     files=()
-    for name in "$@"; do files+=("scripts/lib/${name%.test.sh}.test.sh"); done
+    for name in "$@"; do
+        # A test name, never a path: `../x` would run a script outside scripts/lib.
+        [[ "$name" =~ ^[A-Za-z0-9_-]+(\.test\.sh)?$ ]] \
+            || { echo "test-hooks: not a test name: $name" >&2; exit 1; }
+        files+=("scripts/lib/${name%.test.sh}.test.sh")
+    done
 else
     files=(scripts/lib/*.test.sh)
 fi

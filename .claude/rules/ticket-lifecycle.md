@@ -114,7 +114,10 @@ Before any implementation code:
 
 1. **Run `/code-review` yourself** before telling the user the work is ready. On an uncommitted
    tree it is report-only and stamps nothing. Fix what it surfaces. The SHA-keyed markers `/ship`
-   checks come from `/review-before-shipping`, run against the committed HEAD.
+   checks come from `/review-before-shipping`, run against the committed HEAD. A marker is a process
+   check, not a security control: an agent that writes its own attestation rows can stamp one
+   without a real review. What stops an unreviewed push or PR is the user's `ask` prompt on
+   `git push` and `gh pr create`, so never move those to `allow`.
 2. **Do NOT run `/review-before-shipping` or `/ship`.** Those are the user's to trigger, unless a
    session goal (`/ticket-loop`) has told you to.
 

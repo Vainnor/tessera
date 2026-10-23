@@ -99,6 +99,17 @@ fi
 if [ -n "$WORKTREE_DIR" ] && [ "$(cd "$WORKTREE_DIR" 2>/dev/null && pwd -P)" = "$(cd "$PRIMARY" && pwd -P)" ]; then
     blocked "${WORKTREE_DIR} is the primary checkout, which is never removed."
 fi
+
+# Only the loop's own worktrees: one elsewhere may hold ignored files (a local vault, an .env)
+# that `git worktree remove` would delete with it.
+if [ -n "$WORKTREE_DIR" ]; then
+    RESOLVED="$WORKTREE_DIR"
+    [ -d "$RESOLVED" ] && RESOLVED="$(cd "$RESOLVED" && pwd -P)"
+    case "$RESOLVED/" in
+        "$(cd "$PROJECT_ROOT" && pwd -P)/.claude/worktrees/"?*) ;;
+        *) blocked "${WORKTREE_DIR} is not under .claude/worktrees/. Inspect it and remove it by hand." ;;
+    esac
+fi
 case "$BRANCH" in
     main) blocked "the worktree has main checked out; main is never removed here." ;;
 esac
