@@ -38,6 +38,7 @@ Each one is here because nothing smaller does the job. The policy for adding mor
 | Crate                           | Used by         | Why                                                                                                                                                                                           |
 | ------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `thiserror`                     | core, server    | Typed error enums without hand-written `Display` impls                                                                                                                                        |
+| `automerge`                     | core            | The CRDT for note sync (ADR 0003). Pinned `=0.12.0`, `default-features = false`. MIT, pure Rust, no async runtime or network. Brings 17 other crates, among them the alpha `hexane`           |
 | `anyhow`                        | server binary   | Context on setup errors in binaries only; libraries use `thiserror`                                                                                                                           |
 | `serde`, `serde_json`           | server, desktop | Config and IPC serialization; the de facto standard                                                                                                                                           |
 | `toml`                          | server          | Config file format; `parse` + `serde` features only                                                                                                                                           |
@@ -47,6 +48,7 @@ Each one is here because nothing smaller does the job. The policy for adding mor
 | `tauri`, `tauri-build`          | desktop         | The shell. `default-features = false`; one plugin, below                                                                                                                                      |
 | `tauri-plugin-dialog`           | desktop         | The native folder picker for opening a vault, called from Rust only; no JS permission. Official Tauri plugin, MIT/Apache-2.0. Brings `rfd` and `tauri-plugin-fs` (types only; not registered) |
 | `tower`, `http-body-util` (dev) | server tests    | Drive the router in tests without a socket                                                                                                                                                    |
+| `sha2` (dev)                    | core tests      | Rebuilds a change chunk's checksum to test that non-canonical Automerge changes are refused. `=0.11.1`, `default-features = false`, the version Automerge already brings, so it adds no crate |
 
 ### JavaScript
 

@@ -18,6 +18,7 @@ publish = false
 [workspace.dependencies]
 tessera-core = { path = "crates/core" }
 anyhow = "1.0.104"
+automerge = { version = "=0.12.0", default-features = false }
 axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio", "tracing"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
@@ -51,5 +52,5 @@ module_name_repetitions = "allow"
 codegen-units = 1
 lto = true
 opt-level = "s"
-panic = "abort"
+panic = "unwind"
 strip = true

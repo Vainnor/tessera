@@ -52,6 +52,22 @@ pub enum Error {
         /// The OS error category, such as "permission denied". Never the path.
         kind: String,
     },
+    /// A device id was not 32 lowercase hex characters.
+    #[error("invalid device id")]
+    InvalidDeviceId,
+    /// Sync data was larger than the core accepts, so it was refused before parsing.
+    #[error("the sync data is larger than {limit_bytes} bytes")]
+    SyncDataTooLarge {
+        /// The limit that was exceeded.
+        limit_bytes: u64,
+    },
+    /// Sync data was refused: it is malformed, breaks a rule the core checks, or made the decoder
+    /// fail. The note's history is unchanged.
+    #[error("sync data refused: {reason}")]
+    SyncDataRefused {
+        /// Which check failed. A fixed phrase, never the data itself.
+        reason: String,
+    },
     /// The feature exists in the API but has not been built yet.
     #[error("not implemented yet: {what}")]
     NotImplemented {

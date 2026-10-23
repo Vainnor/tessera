@@ -36,6 +36,9 @@ impl From<Error> for CommandError {
             Error::NotUtf8 => "not-utf8",
             Error::Conflict => "conflict",
             Error::Io { .. } => "io",
+            Error::InvalidDeviceId => "invalid-device-id",
+            Error::SyncDataTooLarge { .. } => "sync-data-too-large",
+            Error::SyncDataRefused { .. } => "sync-data-refused",
             Error::NotImplemented { .. } => "not-implemented",
         };
         Self {

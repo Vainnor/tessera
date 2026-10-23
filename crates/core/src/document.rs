@@ -19,17 +19,20 @@ impl NoteId {
     ///
     /// [`Error::InvalidNoteId`] for any other input.
     pub fn parse(hex: &str) -> Result<Self, Error> {
-        let well_formed = hex.len() == 32
-            && hex
-                .bytes()
-                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b));
-        if !well_formed {
-            return Err(Error::InvalidNoteId);
-        }
-        u128::from_str_radix(hex, 16)
-            .map(Self)
-            .map_err(|_| Error::InvalidNoteId)
+        parse_hex128(hex).map(Self).ok_or(Error::InvalidNoteId)
     }
+}
+
+/// Parses exactly 32 lowercase hex characters, the written form of every 128-bit id.
+pub(crate) fn parse_hex128(hex: &str) -> Option<u128> {
+    let well_formed = hex.len() == 32
+        && hex
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b));
+    if !well_formed {
+        return None;
+    }
+    u128::from_str_radix(hex, 16).ok()
 }
 
 impl fmt::Display for NoteId {

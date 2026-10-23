@@ -18,8 +18,9 @@
 //! - The core is synchronous and owns no async runtime. Callers run blocking work on their own
 //!   thread pool.
 //!
-//! The vault (listing, reading and writing notes on disk) is implemented. The document model,
-//! sync and encryption are stubs that fail closed with [`Error::NotImplemented`].
+//! The vault (listing, reading and writing notes on disk) and each note's sync history
+//! ([`sync::NoteHistory`]) are implemented. Sync transport and encryption are stubs that fail
+//! closed with [`Error::NotImplemented`].
 
 #![forbid(unsafe_code)]
 
