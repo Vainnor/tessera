@@ -20,6 +20,7 @@ CI_REPO="Vainnor/tessera"
 CI_REQUIRED_CHECKS="JS lint, test, build
 Website Lighthouse budget
 Rust format
+Hook tests
 Clippy and tests (ubuntu-24.04)
 Clippy and tests (macos-latest)
 Clippy and tests (windows-latest)

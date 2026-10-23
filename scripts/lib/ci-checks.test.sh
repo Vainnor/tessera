@@ -44,6 +44,19 @@ printf '%s\n' "$CI_REQUIRED_CHECKS" | sort >"$WORK/have"
 sort -o "$WORK/want" "$WORK/want"
 if [[ -s "$WORK/want" ]] && cmp -s "$WORK/want" "$WORK/have"; then ok "CI_REQUIRED_CHECKS matches ci.yml ($(wc -l <"$WORK/want" | tr -d ' ') jobs)"; else bad "drift: $(diff "$WORK/want" "$WORK/have" | tr '\n' ' ')"; fi
 
+echo "The hook tests run in CI:"
+# The runs-on of every job with a `bash scripts/test-hooks.sh` step: want exactly one, on Linux.
+hook_jobs="$(python3 -I - "$ROOT/.github/workflows/ci.yml" <<'PY2'
+import re, sys
+jobs = open(sys.argv[1]).read().split("\njobs:\n", 1)[1]
+for block in re.split(r"\n(?=  [a-z][a-z0-9-]*:\n)", "\n" + jobs):
+    if re.search(r"^      - run: bash scripts/test-hooks\.sh$", block, re.M):
+        m = re.search(r"^    runs-on: (.+)$", block, re.M)
+        print(m.group(1).strip() if m else "(no runs-on)")
+PY2
+)"
+if [[ "$hook_jobs" == "ubuntu-24.04" ]]; then ok "one job runs bash scripts/test-hooks.sh, on ubuntu-24.04"; else bad "jobs running the hook tests, by runs-on: '$hook_jobs'"; fi
+
 echo "Only GitHub Actions' check-runs count:"
 if command -v jq >/dev/null 2>&1; then
     printf '%s' '{"check_runs":[

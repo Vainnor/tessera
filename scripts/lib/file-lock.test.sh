@@ -7,9 +7,9 @@
 #   bash scripts/lib/file-lock.test.sh
 #
 # Two processes holding the lock exclude each other on whatever OS runs this; CI
-# runs it on windows-latest from Git Bash as well (.github/workflows/ci.yml,
-# windows-hooks). The msvcrt branch is also driven here with a fake msvcrt, so its
-# call sequence is checked on every OS. Neither marker module imports fcntl.
+# runs it on Linux (.github/workflows/ci.yml, Hook tests). The msvcrt branch is
+# driven here with a fake msvcrt, so its call sequence is checked on every OS.
+# Neither marker module imports fcntl.
 # Exits non-zero on any failure.
 # ==============================================================================
 set -uo pipefail
