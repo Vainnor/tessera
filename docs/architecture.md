@@ -94,12 +94,12 @@ and the write command come next.
 
 ## Sync (planned)
 
-A CRDT library merges concurrent edits (candidates: Yjs via `yrs`, Loro, Automerge). The
-choice is open and will be judged on: correctness under concurrent edits of markdown text,
-memory and CPU at 10,000 notes, update size, how cleanly updates batch and encrypt as opaque
-blobs, compaction of history without the server's help, and a Rust implementation usable from
-the core without a JS runtime. The encryption layer wraps whatever the CRDT emits
-([threat model](threat-model.md)).
+A CRDT library merges concurrent edits. [ADR 0003](adr/0003-crdt-library.md) chooses Automerge
+over `yrs` and Loro; it is not added yet. The candidates were judged on: correctness under
+concurrent edits of markdown text, memory and CPU at 10,000 notes, update size, how cleanly
+updates batch and encrypt as opaque blobs, compaction of history without the server's help, and
+a Rust implementation usable from the core without a JS runtime. The encryption layer wraps
+whatever the CRDT emits ([threat model](threat-model.md)).
 
 ## Dependencies
 

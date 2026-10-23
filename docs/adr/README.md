@@ -7,6 +7,7 @@ security model. Each record says what was decided, why, and what was given up.
 | ----------------------------------------- | ----------------------------------------- | ------------------------------------- |
 | [0001](0001-repository-and-stack.md)      | Repository layout, stack and dependencies | Accepted                              |
 | [0002](0002-end-to-end-encrypted-sync.md) | End-to-end encrypted sync                 | Accepted (direction); design proposed |
+| [0003](0003-crdt-library.md)              | CRDT library for note sync                | Accepted                              |
 
 Start a new record from [`template.md`](template.md), numbered next in sequence, and add it to
 the table. A record is never rewritten after it is accepted: a later decision supersedes it with

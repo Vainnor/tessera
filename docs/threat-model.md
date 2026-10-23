@@ -274,4 +274,4 @@ device has caught up) and a clear answer in the UI for "I deleted this, is it go
 7. CRDT history compaction and how the UI explains deleted text.
 8. Raw HTML in notes: never render, or a sanitized subset?
 9. Which CRDT library (Yjs/yrs, Loro, Automerge), judged partly by how cleanly its updates can be
-   batched, encrypted and compacted.
+   batched, encrypted and compacted. Answered by [ADR 0003](adr/0003-crdt-library.md): Automerge.
