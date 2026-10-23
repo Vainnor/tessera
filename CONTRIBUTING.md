@@ -48,6 +48,9 @@ the builds and the bundle-size budgets. A check is never disabled to make a pull
 
 ## Commits and pull requests
 
+- Start from an issue ([`.github/ISSUE_GUIDELINES.md`](.github/ISSUE_GUIDELINES.md)). Build on a
+  branch named `{type}/<issue>/{two-to-four-words}`, at most 50 characters, cut from `main`
+  (`feat/12/nested-vault-listing`). The pull request targets `main` and says `Closes #<issue>`.
 - Conventional commits: `type(scope): summary`, imperative, at most 72 characters. Types: `feat`,
   `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `security`.
 - One logical change per commit.

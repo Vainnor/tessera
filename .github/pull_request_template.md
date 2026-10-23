@@ -1,6 +1,12 @@
+Closes #
+
 ## What and why
 
-<!-- What changes, and the reason. Link the issue: Closes #N -->
+<!-- What changes, in plain words, and the reason. -->
+
+## How it works
+
+<!-- A before/after diagram of the data or control flow the change moves. -->
 
 ## How it was verified
 
@@ -8,7 +14,7 @@
 
 ## Checklist
 
-- [ ] `pnpm gate` passes on the committed HEAD
+- [ ] `pnpm gate` passes on the committed HEAD, and `/review-before-shipping` passed on it
 - [ ] Docs updated per `.claude/rules/docs.md`
 - [ ] New dependencies are justified here and in `docs/architecture.md` § Dependencies
 
