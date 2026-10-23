@@ -166,7 +166,9 @@ if [[ $? -eq 0 ]]; then ok "positive control: check_marker_for_head passes HEAD'
 (cd "$REPO" && . "$ROOT/scripts/check-marker.sh" && check_marker_for_head tests Tests "pnpm gate" "" >/dev/null)
 if [[ $? -eq 1 ]]; then ok "an empty PR head does not fall back to HEAD's marker"; else bad "empty PR head fell back to HEAD's marker"; fi
 UNTESTED="$WORK/untested"
-git clone -q "$REPO" "$UNTESTED" && git -C "$UNTESTED" commit -q --allow-empty -m untested
+# A clone has no user.* config, and a CI runner has no global identity: name the author here.
+git clone -q "$REPO" "$UNTESTED" && git -C "$UNTESTED" -c user.email=t@t -c user.name=t commit -q --allow-empty -m untested
+if [[ "$(git -C "$UNTESTED" rev-parse HEAD^ 2>/dev/null)" == "$(git -C "$REPO" rev-parse HEAD)" ]]; then ok "the untested checkout holds one commit on top of the tested one"; else bad "the untested checkout's commit was not made"; fi
 git -C "$REPO" branch -q feat/2/untested && git -C "$REPO" checkout -q feat/2/untested \
     && git -C "$REPO" commit -q --allow-empty -m untested && git -C "$REPO" checkout -q -
 gate_cmd() { # gate_cmd CWD COMMAND; sets RC

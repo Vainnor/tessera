@@ -427,8 +427,12 @@ call "pnpm gate"
 pre toolu_open "pnpm gate"
 if [[ "$(ls "$LEDGER" | sort | tr '\n' ' ')" == "ledger.json lock " ]]; then ok "accepted and pending lines, grants and an open snapshot are one file beside the lock"
 else bad "ledger files: $(ls "$LEDGER" | tr '\n' ' ')"; fi
+# Hold the old file open across the call: ext4 hands a freed inode number straight to the next
+# new file, so without this a rename-replace twice in one call can land on the same number.
+exec 9<"$LEDGER/ledger.json"
 BEFORE="$(inode "$LEDGER/ledger.json")"
 call "ls"
+exec 9<&-
 if [[ "$(inode "$LEDGER/ledger.json")" != "$BEFORE" ]]; then ok "each write replaces the ledger with a new file by a rename, never in place"; else bad "the ledger was rewritten in place"; fi
 printf '{"seal": "", "state": {"accepted": {}, "grants": [], "snapshots": {}}}' > "$LEDGER/ledger.json.tmp"
 call "ls"

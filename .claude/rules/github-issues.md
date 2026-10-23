@@ -700,9 +700,9 @@ fires.
 ## CI is the verdict
 
 Tessera runs CI on every push and PR (`.github/workflows/ci.yml`): the JS gate, Lighthouse,
-rustfmt, clippy and tests on Linux, macOS and Windows, cargo-deny and cargo-audit, and gitleaks.
-Its job set changes; the check-runs on a SHA are the list, so never judge green against a list
-copied into a doc.
+rustfmt, clippy and tests on Linux, macOS and Windows, cargo-deny and cargo-audit, the hook tests
+on Linux, and gitleaks. Its job set changes; the check-runs on a SHA are the list, so never judge
+green against a list copied into a doc.
 
 - **A gate is green only when the check-runs say so.** Read them once per report, for the exact
   SHA:

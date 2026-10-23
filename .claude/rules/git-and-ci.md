@@ -33,5 +33,6 @@
 
 `ci.yml` runs the JS gate (build, lint, format, typecheck, tests, contrast, bundle size, audit),
 the Lighthouse budget, rustfmt, clippy and tests on Linux, macOS and Windows, cargo-deny and
-cargo-audit, and a gitleaks scan of the full history. `dependency-review.yml` checks new
-dependencies on PRs. A red job is fixed, not re-run until green. A check is never disabled to merge.
+cargo-audit, the hook tests (`scripts/test-hooks.sh`) on Linux, and a gitleaks scan of the full
+history. `dependency-review.yml` checks new dependencies on PRs. A red job is fixed, not re-run
+until green. A check is never disabled to merge.

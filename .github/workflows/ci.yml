@@ -75,6 +75,19 @@ jobs:
           persist-credentials: false
       - run: cargo fmt --all -- --check
 
+  hooks:
+    name: Hook tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The shell tests of the Claude Code hooks and workflow scripts (scripts/lib/*.test.sh).
+      - run: bash scripts/test-hooks.sh
+
   rust:
     name: Clippy and tests (${{ matrix.os }})
     strategy:

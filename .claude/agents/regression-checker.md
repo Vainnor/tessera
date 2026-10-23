@@ -25,8 +25,9 @@ one-line why) rather than choosing.
 Tessera collects no telemetry, crash reports or usage data, and never will (`privacy.md`). There
 is no error tracker to read. What exists:
 
-- **CI on `main`** (`.github/workflows/ci.yml`): every job on every push, on Linux, macOS and
-  Windows, the Lighthouse budget, cargo-deny and cargo-audit, and the gitleaks scan.
+- **CI on `main`** (`.github/workflows/ci.yml`): every job on every push: clippy and tests on
+  Linux, macOS and Windows, the Lighthouse budget, cargo-deny and cargo-audit, the hook tests on
+  Linux, and the gitleaks scan.
   `gh run list --repo Vainnor/tessera --branch main --limit 20 --json databaseId,headSha,conclusion,name,createdAt,updatedAt`.
 - **Advisories**: `cargo audit` and `pnpm audit --audit-level=high` against the committed
   lockfiles, run in your worktree. A new advisory against a locked version is a regression even
