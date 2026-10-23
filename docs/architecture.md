@@ -61,6 +61,9 @@ tessera/
   written. Ink and annotations are stored as files in the vault, so they sync like notes.
 - **Website.** Built at compile time from the same theme tokens; ships one small script.
 - **Server.** Will store per-vault logs of encrypted update batches and blobs, and relay them.
+  It will admit only invited accounts and their enrolled devices, verifying sign-in signatures and
+  device-log entries by calling `tessera-core` ([ADR 0004](adr/0004-server-access.md)); none of
+  this is built.
 
 ## The vault
 

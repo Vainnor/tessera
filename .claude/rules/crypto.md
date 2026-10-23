@@ -17,12 +17,12 @@ The design is `docs/threat-model.md`; the decision is `docs/adr/0002-end-to-end-
 
 - **No custom cryptography.** No new primitive, mode, padding scheme, KDF construction or
   protocol. Compose only what the threat model names: XChaCha20-Poly1305, HKDF-SHA-256, HPKE
-  (RFC 9180), Ed25519 with strict verification, Argon2id, the OS CSPRNG. Anything else is an ADR first.
+  (RFC 9180), Ed25519 with strict verification, Argon2id, SHA-256 only for hashing 256-bit random tokens (never for passphrases, MACs or key derivation), the OS CSPRNG. Anything else is an ADR first.
 - **Reviewed crates only.** A crypto crate is added through `dependency-researcher` _and_
   `crypto-reviewer`, with its audit status checked from the source (not memory) and written in
   ADR 0001's dependency table.
-- **All crypto in `tessera-core`.** Never in TypeScript, Swift or Kotlin; never in the server,
-  which only stores and relays ciphertext. No key material crosses IPC or FFI except opaque handles.
+- **All crypto in `tessera-core`.** Never in TypeScript, Swift or Kotlin. The server performs exactly three cryptographic operations, all for access control (ADR 0004) and all by calling `tessera-core`: strict Ed25519 verification of sign-in and log signatures, SHA-256 of invite and session tokens, and OS-CSPRNG draws for tokens, challenges and ids. It holds no private key. Anything else on the server, including a server identity key, is an ADR first. No key material crosses
+  IPC or FFI except opaque handles.
 - **Fail closed.** An error, an unknown version, a failed signature or an unexpected generation
   stops the operation. Never fall back to plaintext, an older key or "skip verification".
 - **Stubs are marked and fail.** Until the real code lands, functions in `crypto.rs` return
@@ -36,7 +36,9 @@ The design is `docs/threat-model.md`; the decision is `docs/adr/0002-end-to-end-
 - Domain-separate every derived key with a distinct HKDF `info` label (`"tessera/doc/v1"`).
 - Version every wire and storage format from the first byte, so it can change without guessing.
 - Secrets live in types that zeroize on drop and do not implement `Debug`, `Display` or `Serialize`.
-- Compare secrets and MACs in constant time; use the library's verify functions, never `==`.
+  Session tokens, invites, pairing codes and the recovery key follow the same rules: never logged,
+  never returned over IPC.
+- Compare secrets and MACs in constant time; use the library's verify functions, never `==`. Looking up the stored SHA-256 hash of a 256-bit random token by index is allowed; never compare raw tokens.
 - Never log, print, panic with or put in an error message any key, nonce-plus-key, plaintext, or
   ciphertext large enough to be content.
 
