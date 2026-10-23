@@ -1,6 +1,6 @@
 name: Feature request
 description: Suggest something Tessera should do.
-labels: [enhancement]
+labels: ["type:feature"]
 body:
   - type: textarea
     id: problem
@@ -13,6 +13,10 @@ body:
     id: idea
     attributes:
       label: What would help
+  - type: markdown
+    attributes:
+      value: |
+        Use made-up examples only: no note content, real file paths or usernames.
   - type: checkboxes
     id: principles
     attributes:

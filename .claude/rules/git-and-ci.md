@@ -16,14 +16,18 @@
 
 ## Branches and pull requests
 
-- `main` is always releasable. Work goes on `type/short-slug` and lands by PR once there are
-  collaborators; until then small commits straight to `main` are fine when `pnpm gate` is green.
+- `main` is always releasable, and nothing is committed to it directly. Every change starts from
+  an issue (`github-issues.md`), is built with `/start` in its own worktree on
+  `{type}/<n>/{desc}` cut from `origin/main` (`ticket-lifecycle.md` → "Branch naming"), and lands
+  by a PR to `main` opened with `/ship`, whose body carries `Closes #<n>`.
+- A hook refuses `gh pr create` until `/review-before-shipping` passed on that exact commit.
 - **Ask the user before** creating a GitHub repository, pushing, opening a PR, or publishing a
   release. Never force-push `main`; never rewrite published history.
 - A PR fills in `.github/pull_request_template.md`, including the security checklist. Write the
   description for someone who knows Rust and React but not this corner of the code. Draw a
   before/after diagram inline when the change moves data.
 - Squash-merge; the PR title becomes the commit and follows the commit format.
+- The user merges. An agent never merges a PR and never pushes `main`.
 
 ## CI (`.github/workflows/`)
 

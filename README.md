@@ -60,7 +60,10 @@ proposal under review, is [`docs/threat-model.md`](docs/threat-model.md).
 
 ## Contributing and security
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Report vulnerabilities privately as described in
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Work is tracked as issues on the
+[Tessera Kanban](https://github.com/users/Vainnor/projects/1) board; how to file one is in
+[`.github/ISSUE_GUIDELINES.md`](.github/ISSUE_GUIDELINES.md). Each change lands on `main` by a pull
+request from an issue branch. Report vulnerabilities privately as described in
 [`SECURITY.md`](SECURITY.md), never in a public issue.
 
 ## License

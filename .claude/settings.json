@@ -40,7 +40,20 @@
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "Bash(gh pr view:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(bash scripts/board-status.sh:*)",
+      "Bash(bash scripts/setup-worktree.sh:*)",
+      "Bash(bash scripts/verify-worktree.sh:*)",
+      "Bash(bash scripts/teardown-worktree.sh:*)",
+      "Bash(bash scripts/review-scan.sh:*)",
+      "Bash(bash scripts/review-marker.sh:*)",
+      "Bash(bash scripts/lib/review-attestation.sh:*)",
+      "Bash(bash scripts/test-hooks.sh:*)",
+      "Bash(git worktree list:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)"
     ],
     "ask": [
       "Bash(git push:*)",
@@ -70,6 +83,132 @@
       "Bash(git add -A:*)",
       "Bash(git add .:*)",
       "Bash(sudo:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/marker-write-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/branch-naming-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/pre-pr-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/test-run-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/branch-ancestry-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/update-branch-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/master-protection-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/attribution-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/issue-work-complete.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          },
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/rules-on-demand.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\" .claude/rules/ticket-lifecycle.md .claude/rules/github-issues.md .claude/rules/writing.md"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/marker-write-gate.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      },
+      {
+        "matcher": "ExitWorktree",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/worktree-teardown.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      },
+      {
+        "matcher": "EnterWorktree",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/rules-on-demand.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\" .claude/rules/ticket-lifecycle.md .claude/rules/github-issues.md"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/marker-audit.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/issue-created-board.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/issue-plan-approved.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/marker-audit.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(dirname \"$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --path-format=absolute --git-common-dir)\")/.claude/hooks/session-context.sh\"; [ -f \"$f\" ] || { echo \"hook missing: $f — the primary checkout must be on main with the current hooks\" >&2; exit 2; }; bash \"$f\""
+          }
+        ]
+      }
     ]
   }
 }

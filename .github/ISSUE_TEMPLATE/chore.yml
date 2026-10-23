@@ -1,0 +1,29 @@
+name: Chore
+description: Tooling, CI, docs, refactors or dependency upkeep, with no change users see.
+labels: ["type:chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems go through private reporting (Security tab), not here.
+        Use made-up examples only: no note content, real file paths or usernames.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: The problem today. Point at the file, script or workflow, and show the output.
+    validations:
+      required: true
+  - type: textarea
+    id: should
+    attributes:
+      label: What should happen
+      description: The direction of the fix and the trade-off it makes.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      description: Checkable outcomes, one per line.
+      placeholder: "1. ...\n2. ..."
