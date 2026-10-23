@@ -18,7 +18,7 @@ FROM caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d
 RUN cp /usr/bin/caddy /caddy
 
 # The same Alpine release the Caddy image is built on; keeps busybox wget for the healthcheck.
-FROM alpine:3.23.7@sha256:eaa20f3de212fa5cda0c64dc715b55ce28619928536d0d2a97ec1a922c1edce8
+FROM alpine:3.24.0@sha256:a2d49ea686c2adfe3c992e47dc3b5e7fa6e6b5055609400dc2acaeb241c829f4
 # Caddy keeps nothing on disk with this config, but still resolves its data and config folders
 # at startup; point them at /tmp so the root filesystem can be mounted read-only.
 ENV XDG_DATA_HOME=/tmp/caddy/data XDG_CONFIG_HOME=/tmp/caddy/config
