@@ -35,3 +35,7 @@ Thumbs.db
 # Claude Code per-user files
 .claude/settings.local.json
 .claude/worktrees/
+# Review and tests markers are local proof for one commit (scripts/review-marker.sh, scripts/gate.sh)
+.claude/markers/
+.claude/worktree-setup.log
+.claude/worktree-teardown.log
