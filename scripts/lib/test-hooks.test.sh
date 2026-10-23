@@ -46,10 +46,11 @@ run_with bad 'echo "bad: 0 passed, 0 failed"'
 if [[ $RC -eq 1 ]]; then ok "a file that passes nothing exits 1"; else bad "zero passed: rc=$RC"; fi
 
 echo "A failing file's cases are printed, since CI keeps no log file:"
-run_with bad 'echo "  PASS: fine"; echo "  FAIL: the case that broke"; echo "bad: 1 passed, 1 failed"; exit 1'
-if [[ "$OUT" == *"FAIL: the case that broke"* && "$OUT" != *"PASS: fine"* ]]; then ok "the failed case is printed, the passing one is not"; else bad "failed case not printed: $OUT"; fi
-run_with bad 'echo "step one"; echo "boom: unbound variable" >&2; exit 1'
-if [[ "$OUT" == *"boom: unbound variable"* ]]; then ok "a file with no FAIL line shows the end of its output"; else bad "crash output not printed: $OUT"; fi
+run_with bad 'echo "  FAIL: first broken case"; echo "  PASS: a FAIL-free case"; echo "  FAIL: second broken case"; echo "bad: 1 passed, 2 failed"; exit 1'
+if [[ "$OUT" == *"FAIL: first broken case"* && "$OUT" == *"FAIL: second broken case"* ]]; then ok "every failed case is printed"; else bad "failed cases not all printed: $OUT"; fi
+if [[ "$OUT" != *"a FAIL-free case"* ]]; then ok "a passing case that names FAIL is not printed"; else bad "passing case printed: $OUT"; fi
+run_with bad 'for i in 1 2 3 4 5 6 7 8 9 10 11 12; do echo "output line $i"; done; echo "boom: unbound variable" >&2; exit 1'
+if [[ "$OUT" == *"boom: unbound variable"* && "$OUT" == *"output line 4"$'\n'* && "$OUT" != *"output line 3"$'\n'* ]]; then ok "a file with no FAIL line shows its last ten lines"; else bad "crash output not the last ten lines: $OUT"; fi
 
 echo ""
 echo "test-hooks: $PASS passed, $FAIL failed"

@@ -7,7 +7,7 @@
 # Each test file ends with `<name>: N passed, M failed` and exits non-zero on a failure. A file
 # passes only when it exits 0 AND that line reports at least one pass and no failure
 # (.claude/rules/testing.md → "Reading results"): a test that died before its summary passes
-# nothing. Under a file that fails go its FAIL lines, or its last ten lines when it has none,
+# nothing. Under a file that fails go its `FAIL:` lines, or its last ten lines when it has none,
 # since CI keeps no log file. The last line is the total. Tests: scripts/lib/test-hooks.test.sh.
 set -uo pipefail
 
@@ -46,7 +46,7 @@ for file in "${files[@]}"; do
     if [[ $rc -ne 0 || -z "$summary" || "$failed" -ne 0 || "$passed" -eq 0 ]]; then
         printf '%-28s FAIL (exit %s, %s; log: %s)\n' "$name" "$rc" "${summary:-no summary line}" "$log"
         # The failed cases, or the end of the output when none is marked: a CI runner keeps no log.
-        if grep -q 'FAIL' "$log"; then grep 'FAIL' "$log"; else tail -n 10 "$log"; fi | sed 's/^/    /'
+        if grep -q '^ *FAIL:' "$log"; then grep '^ *FAIL:' "$log"; else tail -n 10 "$log"; fi | sed 's/^/    /'
         bad_files+=("$name")
     else
         printf '%-28s %s passed\n' "$name" "$passed"
