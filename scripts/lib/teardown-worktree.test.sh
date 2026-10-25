@@ -20,7 +20,7 @@
 #                                          | squash-merged-substring      | the match is a whole line
 # AC3 a failing gh keeps the branch        | squash-merged-gh-fails       | fail-closed on gh errors
 # AC3 a slow gh keeps the branch           | squash-merged-gh-slow        | the 10 s timeout
-# AC4 each case above, with the stubbed gh | (all four AC1-AC3 cases)     | each guard above
+# AC4 each case above, with the stubbed gh | (every AC1-AC3 case above)  | each guard above
 #     fails when its guard is removed      |                              |
 # ==============================================================================
 set -uo pipefail
