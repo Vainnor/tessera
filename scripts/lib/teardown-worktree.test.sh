@@ -21,7 +21,7 @@
 #                                          | squash-merged-substring      | the match is a whole line
 # AC3 a failing gh keeps the branch        | squash-merged-gh-fails       | fail-closed on gh errors
 # AC3 a slow gh keeps the branch           | squash-merged-gh-slow        | the 10 s timeout
-# AC3 no timeout(1): gh is never asked     | squash-merged-no-timeout     | the timeout(1) check
+# AC1 no timeout(1): gh is never asked     | squash-merged-no-timeout     | the timeout(1) check
 # AC4 each case above, with the stubbed gh | (every AC1-AC3 case above)   | each guard above
 #     fails when its guard is removed      |                              |
 # ==============================================================================
@@ -95,6 +95,7 @@ rm -f "$WORK/gh.log"
 teardown "$NAME"
 [[ $RC -eq 0 ]] && ok "exit 0" || bad "exit $RC: $OUT"
 removed "the worktree and its local branch are gone"
+has "...and says why" "Local branch $BR deleted (its commits are on origin)."
 [[ ! -e "$WORK/gh.log" ]] && ok "...without asking gh, since origin holds the branch" || bad "gh called: $(cat "$WORK/gh.log")"
 git -C "$MAIN/../origin.git" show-ref --verify --quiet "refs/heads/$BR" && ok "the remote branch is untouched" || bad "remote branch deleted"
 setup by-path; push_branch
@@ -114,6 +115,7 @@ teardown "$NAME"
 [[ $RC -eq 0 && ! -d "$WT" ]] && ok "the worktree goes (its commits stay on the branch)" || bad "unpushed: exit $RC, dir $([[ -d "$WT" ]] && echo left || echo gone)"
 branch_exists && ok "...and the local branch is kept" || bad "unpushed branch deleted"
 has "...and says why" "Local branch $BR kept: neither origin nor a merged PR is known to hold its commits."
+has "...and the summary says so" "Local branch $BR kept — its commits are not known to be on origin"
 setup ahead; push_branch; printf 'w\n' > "$WT/more.txt" && git -C "$WT" add more.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm more
 teardown "$NAME"
 branch_exists && ok "a branch ahead of its pushed copy is kept" || bad "ahead branch deleted"
