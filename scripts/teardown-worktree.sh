@@ -259,7 +259,8 @@ fi
 # refs/pull/<n>/head. Only an exact match to the branch's commit counts, so a
 # branch with commits past the PR's head is kept. A gh that is missing, fails (its
 # output is then ignored) or runs past its time limit keeps the branch; the limit
-# is what stops a hidden hang.
+# is what stops a hidden hang. gh is asked only where timeout(1) exists: without it
+# with_timeout falls back to a SIGALRM, which gh, a Go program, ignores.
 BRANCH_RESULT=skipped
 if [ "$WORKTREE_REMOVED" = yes ] && [ -n "$BRANCH" ] \
     && git -C "$PROJECT_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH"; then
@@ -269,7 +270,8 @@ if [ "$WORKTREE_REMOVED" = yes ] && [ -n "$BRANCH" ] \
     if [ "$REMOTE_SHA" = "$BRANCH_SHA" ] \
         || git -C "$PROJECT_ROOT" merge-base --is-ancestor "$BRANCH_SHA" origin/main 2>/dev/null; then
         ON_ORIGIN="its commits are on origin"
-    elif MERGED_HEADS="$(GH_PROMPT_DISABLED=1 with_timeout 10 gh pr list --repo Vainnor/tessera \
+    elif command -v timeout >/dev/null 2>&1 \
+        && MERGED_HEADS="$(GH_PROMPT_DISABLED=1 with_timeout 10 gh pr list --repo Vainnor/tessera \
             --head "$BRANCH" --state merged --json headRefOid --jq '.[].headRefOid' 2>/dev/null)" \
         && printf '%s\n' "$MERGED_HEADS" | grep -qxF -- "$BRANCH_SHA"; then
         ON_ORIGIN="its merged PR's head is this commit"

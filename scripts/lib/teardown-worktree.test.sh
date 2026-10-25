@@ -9,7 +9,8 @@
 # worktree at .claude/worktrees/<NAME> (EnterWorktree's layout). A stub gh is first
 # on PATH throughout, so no case reaches GitHub: it fails with no output unless a
 # case sets GH_PRS, which it prints (after sleeping GH_SLEEP seconds, and exiting
-# GH_EXIT, when set). Exits non-zero on any failure.
+# GH_EXIT, when set). Like the real gh, it ignores SIGALRM. Exits non-zero on any
+# failure.
 #
 # Coverage matrix (Vainnor/tessera#25)
 #
@@ -20,6 +21,7 @@
 #                                          | squash-merged-substring      | the match is a whole line
 # AC3 a failing gh keeps the branch        | squash-merged-gh-fails       | fail-closed on gh errors
 # AC3 a slow gh keeps the branch           | squash-merged-gh-slow        | the 10 s timeout
+# AC3 no timeout(1): gh is never asked     | squash-merged-no-timeout     | the timeout(1) check
 # AC4 each case above, with the stubbed gh | (every AC1-AC3 case above)  | each guard above
 #     fails when its guard is removed      |                              |
 # ==============================================================================
@@ -39,7 +41,7 @@ export GIT_CONFIG_NOSYSTEM=1 HOME="$WORK"
 unset GH_TOKEN GITHUB_TOKEN GH_CONFIG_DIR GH_PRS GH_SLEEP GH_EXIT
 
 mkdir -p "$WORK/bin"
-printf '#!/bin/bash\necho "gh $*" >> "%s/gh.log"\n[[ -n "${GH_PRS:-}" ]] || exit 1\n[[ -z "${GH_SLEEP:-}" ]] || sleep "$GH_SLEEP"\nprintf "%%s\\n" "$GH_PRS"\nexit "${GH_EXIT:-0}"\n' "$WORK" > "$WORK/bin/gh"
+printf '#!/bin/bash\ntrap "" ALRM\necho "gh $*" >> "%s/gh.log"\n[[ -n "${GH_PRS:-}" ]] || exit 1\n[[ -z "${GH_SLEEP:-}" ]] || sleep "$GH_SLEEP"\nprintf "%%s\\n" "$GH_PRS"\nexit "${GH_EXIT:-0}"\n' "$WORK" > "$WORK/bin/gh"
 chmod +x "$WORK/bin/gh"
 export PATH="$WORK/bin:$PATH"
 
@@ -139,6 +141,23 @@ setup squash-merged-gh-slow; push_branch; squash_merge
 # A real wait: the stub prints the matching SHA only after the fixed 10 s limit.
 GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_SLEEP=15 teardown "$NAME"
 [[ ! -d "$WT" ]] && branch_exists && ok "a gh slower than the time limit keeps the branch" || bad "gh slow: $OUT"
+# A PATH with every tool but timeout(1), so with_timeout would fall back to a
+# SIGALRM the stub ignores: without the check, gh would answer after 15 s.
+mkdir -p "$WORK/no-timeout"
+IFS=: read -ra PATH_DIRS <<< "$PATH"
+for dir in "${PATH_DIRS[@]}"; do
+    [[ "$dir" != "$WORK/bin" && -d "$dir" ]] || continue
+    for tool in "$dir"/*; do
+        name="${tool##*/}"
+        [[ "$name" == timeout || -e "$WORK/no-timeout/$name" || ! -x "$tool" || -d "$tool" ]] && continue
+        ln -s "$tool" "$WORK/no-timeout/$name"
+    done
+done
+setup squash-merged-no-timeout; push_branch; squash_merge
+rm -f "$WORK/gh.log"
+PATH="$WORK/bin:$WORK/no-timeout" GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_SLEEP=15 teardown "$NAME"
+[[ ! -d "$WT" ]] && branch_exists && ok "without timeout(1) the branch is kept" || bad "no timeout: $OUT"
+[[ ! -e "$WORK/gh.log" ]] && ok "...and gh is never asked" || bad "gh called without timeout(1): $(cat "$WORK/gh.log")"
 
 echo "== refuses =="
 setup dirty; push_branch; printf 'y\n' > "$WT/untracked.txt"
