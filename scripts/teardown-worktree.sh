@@ -3,7 +3,8 @@ set -e
 
 # Tear down a Tessera issue worktree.
 # Removes the worktree directory, and deletes the local branch when origin already
-# holds every commit on it, or when a merged PR's head is the branch's commit.
+# holds every commit on it, or when a merged PR's head is the branch's commit
+# (asked of gh only where timeout(1) exists).
 # Refuses, before anything is removed, while anything in the worktree is
 # uncommitted, or when a detached HEAD holds commits no origin branch has.
 # The remote branch and any PR are never touched.

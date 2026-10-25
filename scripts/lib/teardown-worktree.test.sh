@@ -22,7 +22,7 @@
 # AC3 a failing gh keeps the branch        | squash-merged-gh-fails       | fail-closed on gh errors
 # AC3 a slow gh keeps the branch           | squash-merged-gh-slow        | the 10 s timeout
 # AC3 no timeout(1): gh is never asked     | squash-merged-no-timeout     | the timeout(1) check
-# AC4 each case above, with the stubbed gh | (every AC1-AC3 case above)  | each guard above
+# AC4 each case above, with the stubbed gh | (every AC1-AC3 case above)   | each guard above
 #     fails when its guard is removed      |                              |
 # ==============================================================================
 set -uo pipefail
@@ -119,28 +119,33 @@ teardown "$NAME"
 branch_exists && ok "a branch ahead of its pushed copy is kept" || bad "ahead branch deleted"
 
 echo "== a squash-merged branch whose remote branch is gone =="
-setup squash-merged; push_branch; squash_merge
-GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" teardown "$NAME"
-removed "a merged PR whose head is the branch SHA deletes the branch"
-has "...and says why" "Local branch $BR deleted (its merged PR's head is this commit)."
-GH_CALL="gh pr list --repo Vainnor/tessera --head $BR --state merged --json headRefOid --jq .[].headRefOid"
-[[ "$(tail -1 "$WORK/gh.log")" == "$GH_CALL" ]] && ok "...asking gh for this branch's merged PRs in this repository" || bad "gh call: $(tail -1 "$WORK/gh.log")"
-setup squash-merged-substring; push_branch; squash_merge
-GH_PRS="$(git -C "$MAIN" rev-parse "$BR")0" teardown "$NAME"
-[[ ! -d "$WT" ]] && branch_exists && ok "a head SHA that only contains the branch SHA keeps the branch" || bad "substring match: $OUT"
-setup squash-merged-ahead; push_branch; PR_HEAD="$(git -C "$WT" rev-parse HEAD)"
-printf 'w\n' > "$WT/more.txt" && git -C "$WT" add more.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm more
-squash_merge
-GH_PRS="$PR_HEAD" teardown "$NAME"
-[[ ! -d "$WT" ]] && branch_exists && ok "a branch with commits past the merged PR's head is kept" || bad "ahead of PR head: $OUT"
-setup squash-merged-gh-fails; push_branch; squash_merge
-# The stub prints the matching SHA and then fails: output from a failed gh is not trusted.
-GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_EXIT=1 teardown "$NAME"
-[[ ! -d "$WT" ]] && branch_exists && ok "a failing gh keeps the branch" || bad "gh fails: $OUT"
-setup squash-merged-gh-slow; push_branch; squash_merge
-# A real wait: the stub prints the matching SHA only after the fixed 10 s limit.
-GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_SLEEP=15 teardown "$NAME"
-[[ ! -d "$WT" ]] && branch_exists && ok "a gh slower than the time limit keeps the branch" || bad "gh slow: $OUT"
+# These cases reach gh, which step 5b asks only where timeout(1) exists.
+if command -v timeout >/dev/null 2>&1; then
+    setup squash-merged; push_branch; squash_merge
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" teardown "$NAME"
+    removed "a merged PR whose head is the branch SHA deletes the branch"
+    has "...and says why" "Local branch $BR deleted (its merged PR's head is this commit)."
+    GH_CALL="gh pr list --repo Vainnor/tessera --head $BR --state merged --json headRefOid --jq .[].headRefOid"
+    [[ "$(tail -1 "$WORK/gh.log")" == "$GH_CALL" ]] && ok "...asking gh for this branch's merged PRs in this repository" || bad "gh call: $(tail -1 "$WORK/gh.log")"
+    setup squash-merged-substring; push_branch; squash_merge
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")0" teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a head SHA that only contains the branch SHA keeps the branch" || bad "substring match: $OUT"
+    setup squash-merged-ahead; push_branch; PR_HEAD="$(git -C "$WT" rev-parse HEAD)"
+    printf 'w\n' > "$WT/more.txt" && git -C "$WT" add more.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm more
+    squash_merge
+    GH_PRS="$PR_HEAD" teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a branch with commits past the merged PR's head is kept" || bad "ahead of PR head: $OUT"
+    setup squash-merged-gh-fails; push_branch; squash_merge
+    # The stub prints the matching SHA and then fails: output from a failed gh is not trusted.
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_EXIT=1 teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a failing gh keeps the branch" || bad "gh fails: $OUT"
+    setup squash-merged-gh-slow; push_branch; squash_merge
+    # A real wait: the stub prints the matching SHA only after the fixed 10 s limit.
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_SLEEP=15 teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a gh slower than the time limit keeps the branch" || bad "gh slow: $OUT"
+else
+    echo "  SKIP: no timeout(1) on this host, so step 5b never asks gh; the gh cases did not run"
+fi
 # A PATH with every tool but timeout(1), so with_timeout would fall back to a
 # SIGALRM the stub ignores: without the check, gh would answer after 15 s.
 mkdir -p "$WORK/no-timeout"
