@@ -245,19 +245,21 @@ fi
 # ---------------------------------------------------------------------------
 # 5b. Delete the local branch — only when every commit on it is on origin
 # ---------------------------------------------------------------------------
-# Safe only when origin holds the commits: the pushed branch at this SHA, or
-# origin/main already containing it. Asked of origin now for the
-# branch, not of refs/remotes/origin/*, which still matches after the remote branch
-# is deleted; an unreachable origin prints nothing, so the branch is kept. No
-# prompts and a time limit: the hook's output is hidden, so a credential prompt
-# would hang the session invisibly. A stale origin/main only makes the check stricter.
+# Safe only when origin holds the commits: the pushed branch at this SHA,
+# origin/main already containing it, or (below) a merged PR whose head is this
+# commit. The pushed branch is asked of origin now, not of refs/remotes/origin/*,
+# which still matches after the remote branch is deleted; an unreachable origin
+# prints nothing, so the branch is kept. No prompts and a time limit: the hook's
+# output is hidden, so a credential prompt would hang the session invisibly. A
+# stale origin/main only makes the check stricter.
 #
-# A squash merge satisfies neither: GitHub deletes the remote branch and main gets a
-# new commit. So, failing both, ask GitHub (not origin) for the head SHAs of the
-# branch's merged PRs: GitHub keeps a merged PR's commits under refs/pull/<n>/head.
-# Only an exact match to the branch's commit counts, so a branch with commits past
-# the PR's head is kept. A gh that is missing, fails (its output is then ignored) or
-# runs past its time limit keeps the branch; the limit is what stops a hidden hang.
+# A squash merge satisfies neither origin check: GitHub deletes the remote branch
+# and main gets a new commit. So, failing both, ask GitHub (not origin) for the
+# head SHAs of the branch's merged PRs: GitHub keeps a merged PR's commits under
+# refs/pull/<n>/head. Only an exact match to the branch's commit counts, so a
+# branch with commits past the PR's head is kept. A gh that is missing, fails (its
+# output is then ignored) or runs past its time limit keeps the branch; the limit
+# is what stops a hidden hang.
 BRANCH_RESULT=skipped
 if [ "$WORKTREE_REMOVED" = yes ] && [ -n "$BRANCH" ] \
     && git -C "$PROJECT_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH"; then

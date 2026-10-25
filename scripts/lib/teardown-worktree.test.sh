@@ -15,11 +15,13 @@
 #
 # Requirement                              | Case                         | Guard it kills
 # -----------------------------------------|------------------------------|-----------------------------
-# AC1 merged PR at the branch SHA deletes  | squash-merged                | merged-PR SHA match
+# AC1 merged PR at the branch SHA deletes  | squash-merged                | the merged-PR check, its query
 # AC2 branch past the PR head is kept      | squash-merged-ahead          | merged-PR SHA match
+#                                          | squash-merged-substring      | the match is a whole line
 # AC3 a failing gh keeps the branch        | squash-merged-gh-fails       | fail-closed on gh errors
 # AC3 a slow gh keeps the branch           | squash-merged-gh-slow        | the 10 s timeout
-# AC4 no case reaches GitHub               | the file-wide gh stub        | -
+# AC4 each case above, with the stubbed gh | (all four AC1-AC3 cases)     | each guard above
+#     fails when its guard is removed      |                              |
 # ==============================================================================
 set -uo pipefail
 
@@ -87,9 +89,11 @@ removed()  { if [[ ! -d "$WT" ]] && ! branch_exists; then ok "$1"; else bad "$1 
 
 echo "== removes a clean, pushed worktree =="
 setup pushed; push_branch
+rm -f "$WORK/gh.log"
 teardown "$NAME"
 [[ $RC -eq 0 ]] && ok "exit 0" || bad "exit $RC: $OUT"
 removed "the worktree and its local branch are gone"
+[[ ! -e "$WORK/gh.log" ]] && ok "...without asking gh, since origin holds the branch" || bad "gh called: $(cat "$WORK/gh.log")"
 git -C "$MAIN/../origin.git" show-ref --verify --quiet "refs/heads/$BR" && ok "the remote branch is untouched" || bad "remote branch deleted"
 setup by-path; push_branch
 teardown "$WT"
@@ -116,6 +120,12 @@ echo "== a squash-merged branch whose remote branch is gone =="
 setup squash-merged; push_branch; squash_merge
 GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" teardown "$NAME"
 removed "a merged PR whose head is the branch SHA deletes the branch"
+has "...and says why" "Local branch $BR deleted (its merged PR's head is this commit)."
+GH_CALL="gh pr list --repo Vainnor/tessera --head $BR --state merged --json headRefOid --jq .[].headRefOid"
+[[ "$(tail -1 "$WORK/gh.log")" == "$GH_CALL" ]] && ok "...asking gh for this branch's merged PRs in this repository" || bad "gh call: $(tail -1 "$WORK/gh.log")"
+setup squash-merged-substring; push_branch; squash_merge
+GH_PRS="$(git -C "$MAIN" rev-parse "$BR")0" teardown "$NAME"
+[[ ! -d "$WT" ]] && branch_exists && ok "a head SHA that only contains the branch SHA keeps the branch" || bad "substring match: $OUT"
 setup squash-merged-ahead; push_branch; PR_HEAD="$(git -C "$WT" rev-parse HEAD)"
 printf 'w\n' > "$WT/more.txt" && git -C "$WT" add more.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm more
 squash_merge
