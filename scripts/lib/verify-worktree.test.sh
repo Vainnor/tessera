@@ -32,6 +32,10 @@ git init -q -b main "$MAIN"
 printf 'node_modules/\napps/desktop/dist/\n' > "$MAIN/.gitignore"
 # pnpm 11+ writes two YAML documents; node_modules/.pnpm/lock.yaml holds only the second.
 printf -- '---\npnpmfileChecksum: x\n---\nlockfileVersion: 9.0\n' > "$MAIN/pnpm-lock.yaml"
+# Committed before `worktree add`, so the primary and the worktree each carry their own copy.
+mkdir -p "$MAIN/.githooks"
+printf '#!/bin/sh\nexit 0\n' > "$MAIN/.githooks/commit-msg"
+chmod +x "$MAIN/.githooks/commit-msg"
 g add -A && g commit -qm init
 g update-ref refs/remotes/origin/main HEAD
 g config core.hooksPath .githooks
@@ -102,13 +106,97 @@ verify
 lacks "no CARGO_TARGET_DIR is no warning" "CARGO_TARGET_DIR"
 
 echo "== the git hooks =="
+# $WORK stays logical (not pwd -P): on macOS it is /var/folders/... while git reports
+# /private/var/..., so the absolute cases pass only through the physical comparison.
+FIX="run ! git config core.hooksPath .githooks"
+
 g config --unset core.hooksPath; verify
-has "no core.hooksPath fails and names the fix" "FAIL git hooks not installed (core.hooksPath is '', not .githooks): run git config core.hooksPath .githooks once per clone"
+has "no core.hooksPath fails" "FAIL git hooks not installed (core.hooksPath is ''"
+has "...and names the ! fix" "$FIX"
+lacks "...and does not pass" "PASS git hooks installed"
 [ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "no hooks exit $RC"
+
 g config core.hooksPath /dev/null; verify
-has "another core.hooksPath fails" "FAIL git hooks not installed (core.hooksPath is '/dev/null'"
+has "core.hooksPath=/dev/null fails" "FAIL git hooks not installed (core.hooksPath is '/dev/null'"
+has "...and names the ! fix" "$FIX"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "/dev/null exit $RC"
+
+g config core.hooksPath ./.githooks; verify
+has "core.hooksPath=./.githooks fails (only the exact relative value is accepted)" "FAIL git hooks not installed (core.hooksPath is './.githooks'"
+has "...and names the ! fix" "$FIX"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "./.githooks exit $RC"
+
+# A relative path that reaches the primary's .githooks is still not the relative .githooks.
+g config core.hooksPath ../../../../main/.githooks; verify
+has "a relative path to the primary's .githooks fails" "FAIL git hooks not installed (core.hooksPath is '../../../../main/.githooks'"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "relative to primary exit $RC"
+
+# A directory that has a commit-msg but is not the primary's .githooks.
+mkdir -p "$WORK/elsewhere/.githooks"
+printf '#!/bin/sh\nexit 0\n' > "$WORK/elsewhere/.githooks/commit-msg"
+chmod +x "$WORK/elsewhere/.githooks/commit-msg"
+g config core.hooksPath "$WORK/elsewhere/.githooks"; verify
+has "another directory holding a commit-msg fails" "FAIL git hooks not installed (core.hooksPath is '$WORK/elsewhere/.githooks'"
+has "...and names the ! fix" "$FIX"
+lacks "...and does not pass" "PASS git hooks installed"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "elsewhere exit $RC"
+
+g config core.hooksPath "$WT/.githooks"; verify
+has "the worktree's own absolute .githooks fails (not the primary's)" "FAIL git hooks not installed (core.hooksPath is '$WT/.githooks'"
+has "...and names the ! fix" "$FIX"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "worktree absolute exit $RC"
+
+g config core.hooksPath "$WORK/nope/.githooks"; verify
+has "a nonexistent absolute path fails" "FAIL git hooks not installed (core.hooksPath is '$WORK/nope/.githooks'"
+has "...and names the ! fix" "$FIX"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "nonexistent exit $RC"
+
+# Both sides unresolvable: an empty `cd && pwd -P` on each side must not compare equal.
+mv "$MAIN/.githooks" "$WORK/main-githooks.bak"
+g config core.hooksPath "$WORK/nope/.githooks"; verify
+has "a nonexistent path with no primary .githooks fails" "FAIL git hooks not installed (core.hooksPath is '$WORK/nope/.githooks'"
+lacks "...and does not pass" "PASS git hooks installed"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "both-empty exit $RC"
+mv "$WORK/main-githooks.bak" "$MAIN/.githooks"
+
+g config core.hooksPath "$MAIN/.githooks"; verify
+has "the primary checkout's absolute .githooks passes" "PASS git hooks installed (core.hooksPath=$MAIN/.githooks)"
+lacks "...and does not fail" "FAIL git hooks not installed"
+[ "$RC" -eq 0 ] && ok "...and the health check exits 0" || bad "absolute primary exit $RC: $OUT"
+
+g config core.hooksPath "$MAIN/.githooks/"; verify
+has "...with a trailing slash passes" "PASS git hooks installed (core.hooksPath=$MAIN/.githooks/)"
+[ "$RC" -eq 0 ] && ok "...and the health check exits 0" || bad "trailing slash exit $RC: $OUT"
+
+# Both sides resolve physically, so a primary .githooks that is a symlink still matches itself.
+mv "$MAIN/.githooks" "$WORK/real-githooks" && ln -s "$WORK/real-githooks" "$MAIN/.githooks"
+g config core.hooksPath "$MAIN/.githooks"; verify
+has "a symlinked primary .githooks passes" "PASS git hooks installed (core.hooksPath=$MAIN/.githooks)"
+rm "$MAIN/.githooks" && mv "$WORK/real-githooks" "$MAIN/.githooks"
+
+# The absolute value uses the primary's hooks dir, so the primary's commit-msg is the one checked.
+mv "$MAIN/.githooks/commit-msg" "$WORK/main-commit-msg.bak"
+g config core.hooksPath "$MAIN/.githooks"; verify
+has "absolute .githooks with no commit-msg in the primary fails" "has no commit-msg"
+has "...and names the ! fix" "$FIX"
+lacks "...and does not report the value as unaccepted" "core.hooksPath is '"
+lacks "...and does not pass" "PASS git hooks installed"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "absolute no commit-msg exit $RC"
+mv "$WORK/main-commit-msg.bak" "$MAIN/.githooks/commit-msg"
+
+# The relative value uses the worktree's own hooks dir.
+mv "$WT/.githooks/commit-msg" "$WORK/wt-commit-msg.bak"
 g config core.hooksPath .githooks; verify
-has "core.hooksPath=.githooks passes" "PASS git hooks installed"
+has "relative .githooks with no commit-msg in the worktree fails" ".githooks has no commit-msg"
+has "...and names the ! fix" "$FIX"
+lacks "...and does not report the value as unaccepted" "core.hooksPath is '"
+lacks "...and does not pass" "PASS git hooks installed"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "relative no commit-msg exit $RC"
+mv "$WORK/wt-commit-msg.bak" "$WT/.githooks/commit-msg"
+
+g config core.hooksPath .githooks; verify
+has "core.hooksPath=.githooks passes" "PASS git hooks installed (core.hooksPath=.githooks)"
+[ "$RC" -eq 0 ] && ok "...and the health check exits 0" || bad "relative exit $RC: $OUT"
 
 echo "== branch name and ancestry =="
 git -C "$WT" branch -q -m worktree-feat+1+thing; verify
