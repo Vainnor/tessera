@@ -193,8 +193,8 @@ elif [[ "$HOOKS_PATH" == /* ]] && PRIMARY_ROOT="$(main_repo_root)"; then
 fi
 if [[ -z "$HOOKS_DIR" ]]; then
     check_fail "git hooks not installed (core.hooksPath is '${HOOKS_PATH}', not .githooks or the primary checkout's .githooks): ${HOOKS_FIX}"
-elif [[ ! -f "$HOOKS_DIR/commit-msg" ]]; then
-    check_fail "git hooks not installed (${HOOKS_DIR} has no commit-msg): ${HOOKS_FIX}"
+elif [[ ! -x "$HOOKS_DIR/commit-msg" ]]; then
+    check_fail "git hooks not installed (${HOOKS_DIR} has no executable commit-msg): ${HOOKS_FIX}"
 else
     check_pass "git hooks installed (core.hooksPath=${HOOKS_PATH})"
 fi

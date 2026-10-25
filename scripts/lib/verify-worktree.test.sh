@@ -151,7 +151,7 @@ has "a nonexistent absolute path fails" "FAIL git hooks not installed (core.hook
 has "...and names the ! fix" "$FIX"
 [ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "nonexistent exit $RC"
 
-# Both sides unresolvable: an empty `cd && pwd -P` on each side must not compare equal.
+# Both sides unresolvable: the two empty results compare equal, and the check must still fail.
 mv "$MAIN/.githooks" "$WORK/main-githooks.bak"
 g config core.hooksPath "$WORK/nope/.githooks"; verify
 has "a nonexistent path with no primary .githooks fails" "FAIL git hooks not installed (core.hooksPath is '$WORK/nope/.githooks'"
@@ -174,10 +174,18 @@ g config core.hooksPath "$MAIN/.githooks"; verify
 has "a symlinked primary .githooks passes" "PASS git hooks installed (core.hooksPath=$MAIN/.githooks)"
 rm "$MAIN/.githooks" && mv "$WORK/real-githooks" "$MAIN/.githooks"
 
+# A symlink in the configured path, which on Linux is the only one (a macOS $TMPDIR has its own).
+ln -s "$WORK" "$WORK/alias"
+g config core.hooksPath "$WORK/alias/main/.githooks"; verify
+has "a path to the primary's .githooks through a symlink passes" "PASS git hooks installed (core.hooksPath=$WORK/alias/main/.githooks)"
+[ "$RC" -eq 0 ] && ok "...and the health check exits 0" || bad "symlinked path exit $RC: $OUT"
+rm "$WORK/alias"
+
 # The absolute value uses the primary's hooks dir, so the primary's commit-msg is the one checked.
 mv "$MAIN/.githooks/commit-msg" "$WORK/main-commit-msg.bak"
 g config core.hooksPath "$MAIN/.githooks"; verify
-has "absolute .githooks with no commit-msg in the primary fails" "has no commit-msg"
+has "absolute .githooks with no commit-msg in the primary fails" "has no executable commit-msg"
+has "...and names the primary's directory" "$(cd "$MAIN" && pwd -P)/.githooks has no executable commit-msg"
 has "...and names the ! fix" "$FIX"
 lacks "...and does not report the value as unaccepted" "core.hooksPath is '"
 lacks "...and does not pass" "PASS git hooks installed"
@@ -187,12 +195,19 @@ mv "$WORK/main-commit-msg.bak" "$MAIN/.githooks/commit-msg"
 # The relative value uses the worktree's own hooks dir.
 mv "$WT/.githooks/commit-msg" "$WORK/wt-commit-msg.bak"
 g config core.hooksPath .githooks; verify
-has "relative .githooks with no commit-msg in the worktree fails" ".githooks has no commit-msg"
+has "relative .githooks with no commit-msg in the worktree fails" ".githooks has no executable commit-msg"
 has "...and names the ! fix" "$FIX"
 lacks "...and does not report the value as unaccepted" "core.hooksPath is '"
 lacks "...and does not pass" "PASS git hooks installed"
 [ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "relative no commit-msg exit $RC"
 mv "$WORK/wt-commit-msg.bak" "$WT/.githooks/commit-msg"
+
+# Git skips a hook that is not executable, so a commit-msg without the bit is not installed.
+chmod -x "$WT/.githooks/commit-msg"
+g config core.hooksPath .githooks; verify
+has "a commit-msg that is not executable fails" ".githooks has no executable commit-msg"
+[ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "non-executable commit-msg exit $RC"
+chmod +x "$WT/.githooks/commit-msg"
 
 g config core.hooksPath .githooks; verify
 has "core.hooksPath=.githooks passes" "PASS git hooks installed (core.hooksPath=.githooks)"
