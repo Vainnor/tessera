@@ -92,7 +92,8 @@ already lifted it.
    once per SHA, so either proof satisfies it: `.claude/markers/tests/<sha>` in this checkout, or
    green CI check-runs on that exact SHA
    (`gh api repos/Vainnor/tessera/commits/<sha>/check-runs --jq '.check_runs[] | "\(.conclusion) \(.name)"'`,
-   every job `success`). With neither, run `pnpm gate`. This holds on rework too, where the PR
+   every job `success`). With neither, run `pnpm gate` as its own call
+   (`review-before-shipping.md` → "Phase 5: The gate"). This holds on rework too, where the PR
    exists and `pre-pr-gate.sh` does not fire.
 3. `git push -u origin {branch-name}`.
 4. Check the push against the remote itself, not the local tracking ref:

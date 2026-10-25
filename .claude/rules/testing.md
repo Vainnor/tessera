@@ -31,3 +31,13 @@
   too much.
 - Say which tiers ran. Other-OS CI jobs, the GUI and Lighthouse do not run in a quick local loop;
   say so rather than implying they passed. `pnpm gate` runs everything that can run locally.
+
+## Reproducing a Linux CI job locally
+
+A Docker Desktop container is not the `ubuntu-24.04` runner, and a script can pass in one and fail
+on the other. Before calling a Linux CI change reproduced, match the runner: a non-root user, the
+runner's tools installed (zip, rsync, jq), no git identity (a test that commits sets its own), and
+`TMPDIR` on an ext4 loop mount, since the container's overlayfs does not hand out inode numbers
+the way the runner's ext4 does. ext4 gives a freed inode number to the next new file, so a test
+that compares a file's inode before and after a rewrite holds the old file open across the call
+(`exec 9<file`), as `scripts/lib/marker-audit.test.sh` does.

@@ -12,7 +12,10 @@ You audit a diff you did not write. You have no context from the implementation 
 `crypto-reviewer` agent must also run.
 
 You are read-only: never edit, commit, push or post. Bash is for `git diff`, `git log`,
-`cargo tree`, `grep` and running existing tests. Scratch files go under `mktemp -d`.
+`cargo tree`, `grep` and running existing tests. Scratch files go under `mktemp -d`. The one
+exception: when `/code-review` dispatches you as its `security` lens, write its attestation file,
+`<checkout root>/.claude/markers/attest/<reviewed SHA>/security.md`, and nothing else
+(`code-review.md` → "Phase 3: Lens reviews and attestation").
 
 ## Method
 

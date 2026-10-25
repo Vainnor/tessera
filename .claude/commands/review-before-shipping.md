@@ -6,7 +6,9 @@ You are performing a formal review before shipping. Follow these phases in order
 before the review markers are written. Report findings; fix only what this branch introduced.
 
 Under `/ticket-loop` this runs inside the `ticket-worker` subagent: every "ask the user" below
-becomes an `OPERATOR_QUESTIONS` entry in its report, not a guess.
+becomes an `OPERATOR_QUESTIONS` entry in its report, not a guess, and every review agent it
+dispatches becomes a `STATUS: needs-dispatch` entry (`ticket-worker.md` → "Dispatching other
+agents").
 
 ## Phase 0: Pin the reviewed commit
 
@@ -84,6 +86,10 @@ user's yes for a heavy one (`dependencies.md`). Read `Cargo.lock` and `pnpm-lock
    every job `success`), satisfies this phase. Only when neither exists, run `pnpm gate` in the
    background, output to a scratch file. On a green run against a clean committed HEAD it writes
    `.claude/markers/tests/<HEAD sha>`, which `test-run-gate.sh` requires before `gh pr create`.
+   Run it as its own call: `pnpm gate > <scratch file> 2>&1` alone, or as exactly
+   `cd <absolute worktree root> && pnpm gate > <scratch file> 2>&1` from a session outside the
+   worktree (a subagent). Chain nothing after it: a line such as `pnpm gate && git status` makes
+   the marker audit drop the tests marker the run wrote.
 2. Every step says PASS. Read every `test result:` line and vitest's `Tests` line, and name any
    failing test or MISSING tool (`testing.md` → "Reading results"). A MISSING step is not a pass.
 3. A uniform failure is environmental: read the first error (`node_modules` out of step with the
