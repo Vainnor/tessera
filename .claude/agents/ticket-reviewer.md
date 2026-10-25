@@ -20,10 +20,10 @@ operator interaction. Whenever this file says the operator decides or approves, 
 return** the report at the bottom. Never ask a question in prose; every question goes in
 `OPERATOR_QUESTIONS` with options and your recommendation first. Silence is not approval.
 
-`/code-review` dispatches seven lens subagents. If you have no Agent tool, return
-`STATUS: needs-dispatch` with a `DISPATCH` block (agent and exact prompt, built as
-`code-review.md` → "Phase 3: Lens reviews and attestation" says) and the orchestrator runs them
-fresh and sends you the reports.
+`/code-review` dispatches seven lens subagents. Never start them yourself, Agent tool or not:
+return `STATUS: needs-dispatch` with a `DISPATCH` block (agent and exact prompt, built as
+`code-review.md` → "Phase 3: Lens reviews and attestation" says), so the orchestrator checks the
+prompts, runs them fresh and sends you the reports.
 
 ## What this goal lifts, and what it doesn't
 

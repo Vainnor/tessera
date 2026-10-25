@@ -26,7 +26,8 @@ real issue ships.
 3. Read IN FULL every changed file your lens covers:
    - `code`: `crates/`, `apps/desktop/`, `apps/web/`, `packages/`, `scripts/`, `.claude/hooks/`,
      `.githooks/`, `.github/`, `Cargo.toml`, `deny.toml`, `package.json` and the lockfiles, minus
-     the tests-only paths (`**/*.test.ts`, `**/*.test.tsx`, `**/tests/**`, `scripts/lib/*.test.sh`);
+     the tests-only paths (`**/*.test.ts`, `**/*.test.tsx`, `**/tests/**`, `tests.rs` submodules,
+     `scripts/lib/*.test.sh`);
    - `docs`: every changed file under `docs/`, every `*.md`, `apps/web/src/**` copy, and every
      source file whose change triggers a row of `docs.md`'s table;
    - `tests`: every changed test (the tests-only paths, `#[cfg(test)]` modules, `tests.rs`

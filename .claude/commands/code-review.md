@@ -79,9 +79,10 @@ written in literally:
 attestations, so their prompts add: "Also write the attestation file at <path>, one row per `## `
 and `### ` heading of every file `.claude/review-lenses.tsv` maps to your lens, in the format
 `.claude/agents/code-review-agent.md` → 'Attestation' gives, and run
-`bash scripts/lib/review-attestation.sh check`." `crypto-reviewer` runs on every branch: when the
-diff touches none of `crypto.md`'s paths and nothing about keys, signatures, sync payloads or what
-the server sees, it attests each heading `N/A` with that reason, which takes a minute.
+`bash scripts/lib/review-attestation.sh check`." That file is the one write both agents' read-only
+rule allows. `crypto-reviewer` runs on every branch: when the diff touches none of `crypto.md`'s
+paths and nothing about keys, signatures, sync payloads or what the server sees, it attests each
+heading `N/A` with that reason, which takes a minute.
 
 The lenses and the rule files each attests live in `.claude/review-lenses.tsv`; add a lens there,
 never in this table alone.
@@ -98,11 +99,12 @@ finding on a line unchanged since `PRIOR_SHA` is **VARIANCE**: reported, and blo
 is CRITICAL, or a MAJOR stated with a failure scenario for a security control, a crypto property,
 note data or the UniFFI boundary.
 
-**A tests-only delta** (every path it lists matches `**/*.test.ts`, `**/*.test.tsx`, `**/tests/**`
-or `scripts/lib/*.test.sh`; an inline Rust `#[cfg(test)] mod tests` or a `tests.rs` submodule does
-not qualify, because it compiles into the crate): dispatch lenses `tests`, `intent` and `ac` as a
-repeat round. Carry `code`, `docs`, `security` and `crypto`, which review none of those paths: `cp` each
-prior attestation into the reviewed SHA's directory, then add a first line
+**A tests-only delta** (every path it lists matches `**/*.test.ts`, `**/*.test.tsx`, `**/tests/**`,
+a Rust test module in its own `tests.rs` file, or `scripts/lib/*.test.sh`; an inline Rust
+`#[cfg(test)] mod tests` does not qualify, because its file also holds production code): dispatch
+lenses `tests`, `docs`, `crypto`, `intent` and `ac` as a repeat round. Carry only `code` and
+`security`, the lenses `review-attestation.sh check` accepts carried (its `ATTEST_CARRY_LENSES`):
+`cp` each prior attestation into the reviewed SHA's directory, then add a first line
 `Carried-from <PRIOR_SHA>: tests-only delta`. When `PRIOR_SHA` is HEAD the files are already
 there. Those copies are the only rows the caller writes, and `review-attestation.sh check` enforces
 them.
@@ -188,7 +190,8 @@ the parity.
      every check-run `success`. An empty list or a `null` conclusion means CI has not run or not
      finished, not green.
 
-   Only when neither exists, run `pnpm gate` (in the background, output to a file, long timeout).
+   Only when neither exists, run `pnpm gate` (in the background, output to a file, long timeout),
+   as its own call (`review-before-shipping.md` → "Phase 5: The gate").
    Never run it again on a SHA that already has one. Targeted runs (one test, a mutation's killing
    test) are always fine.
 
