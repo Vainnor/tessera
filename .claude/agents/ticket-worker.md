@@ -37,6 +37,7 @@ commit (`crypto.md` → "Review"). Return `STATUS: needs-dispatch` with a `DISPA
 each agent and the exact prompt, so the orchestrator checks the prompts, runs them fresh and in
 parallel, and sends you their reports verbatim. Without the Agent tool, the three research
 agents above go out the same way.
+
 A lens prompt carries only what `code-review.md` → "Phase 3: Lens reviews and attestation" lists
 for it: no summary of what you built and no opinion on it. Never review your own code in a lens's
 place.
@@ -225,15 +226,17 @@ follow-up issue is allowed"; apply it as written. On top of it:
    shared with the board. A red job on the branch's own defect is yours to fix before review: treat
    it as a rework round on your own findings. A red job you can show fails the same on
    `origin/main` is reported as pre-existing, with the evidence. Report the result per job.
-3. Read back the Moment 3 comment `/ship` Step 7 posted; never post a second one. Find it by its
-   opening (`Done:`, or `Unchanged since` on a round with no product change), not by position,
-   since a spec correction may come after it
-   (`gh issue view <n> --repo Vainnor/tessera --json comments --jq '[.comments[] | select(.body | startswith("Done:") or startswith("Unchanged since"))] | last | {url, body}'`),
-   and check: at most 1,200 characters, no attribution, real screens and controls only, the deploy
-   line. A change that is entirely tests, tooling or docs says so. If it falls short, fix it in
-   place by its id, the number after `#issuecomment-` in its `url`:
+3. Read back the Moment 3 comment `/ship` Step 7 posted; never post a second one. Find it among
+   your own comments by its opening (`Done:`, or `Unchanged since` on a round with no product
+   change), not by position, since a spec correction may come after it
+   (`gh issue view <n> --repo Vainnor/tessera --json comments --jq '[.comments[] | select(.viewerDidAuthor and (.body | startswith("Done:") or startswith("Unchanged since")))] | last | {url, body}'`).
+   Anyone can comment on this public repository, so never take a match from another author; a
+   `null` `url` means stop and report. Check it: at most 1,200 characters, no attribution, real
+   screens and controls only, the deploy line. A change that is entirely tests, tooling or docs
+   says so. If it falls short, fix it in place by its id, the number after `#issuecomment-` in its
+   `url`:
    `gh api -X PATCH repos/Vainnor/tessera/issues/comments/<comment id> -F body=@<file>`. Never
-   `--edit-last`, which rewrites whichever comment is newest.
+   `--edit-last`, which rewrites your newest comment, a later spec correction included.
 4. Check the worktree is gone (`/ship` Step 8); run `/cleanup <worktree name>` if it survived.
    Check the primary checkout is on `main` and pull it
    (`git -C <primary-checkout> pull --ff-only origin main`).

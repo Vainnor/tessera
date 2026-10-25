@@ -6,7 +6,8 @@ You are performing a formal review before shipping. Follow these phases in order
 before the review markers are written. Report findings; fix only what this branch introduced.
 
 Under `/ticket-loop` this runs inside the `ticket-worker` subagent: every "ask the user" below
-becomes an `OPERATOR_QUESTIONS` entry in its report, not a guess.
+becomes an `OPERATOR_QUESTIONS` entry in its report, not a guess, and every agent it dispatches
+becomes a `STATUS: needs-dispatch` entry (`ticket-worker.md` → "Dispatching other agents").
 
 ## Phase 0: Pin the reviewed commit
 

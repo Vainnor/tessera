@@ -81,7 +81,8 @@ ACs. Then look for all of the following, and go further where it makes sense:
   (`gh api repos/Vainnor/tessera/commits/<sha>/check-runs --jq '.check_runs[] | "\(.conclusion) \(.name)"'`,
   every job `success`), or a tests marker for it in your checkout, satisfy it; never run
   `pnpm gate` on a SHA that already has one. If CI hasn't finished, wait for it, checking every 2
-  to 3 minutes. Only when neither exists do you run `pnpm gate`. Your local time goes to
+  to 3 minutes. Only when neither exists do you run `pnpm gate`, as its own call
+  (`review-before-shipping.md` → "Phase 5: The gate"). Your local time goes to
   mutations, probes and the running app. Read the summary lines, never the exit code.
 - The Moment 3 verification notes, tested end to end yourself, happy and sad paths: targeted tests
   where they prove a step, and, when the branch has a screen, the app (`pnpm dev:desktop`) or site
@@ -210,7 +211,8 @@ leave it). On each relayed approval, in the review worktree:
 
 1. Commit it by explicit path, `<type>(<scope>): <what>`, the body saying it is a review fix for
    `#<n>`, no trailers.
-2. Run the affected tests, then `pnpm gate` on the clean tree and read its summary lines.
+2. Run the affected tests, then `pnpm gate` on the clean tree as its own call
+   (`review-before-shipping.md` → "Phase 5: The gate"), and read its summary lines.
 3. Push it as a standalone command: `git push origin HEAD:<pr-branch>`. Confirm
    `git ls-remote origin refs/heads/<pr-branch>` equals `git rev-parse HEAD`. Never push the
    review branch under its own name.
