@@ -195,7 +195,7 @@ mv "$WORK/main-commit-msg.bak" "$MAIN/.githooks/commit-msg"
 # The relative value uses the worktree's own hooks dir.
 mv "$WT/.githooks/commit-msg" "$WORK/wt-commit-msg.bak"
 g config core.hooksPath .githooks; verify
-has "relative .githooks with no commit-msg in the worktree fails" ".githooks has no executable commit-msg"
+has "relative .githooks with no commit-msg in the worktree fails" "$(cd "$WT" && pwd -P)/.githooks has no executable commit-msg"
 has "...and names the ! fix" "$FIX"
 lacks "...and does not report the value as unaccepted" "core.hooksPath is '"
 lacks "...and does not pass" "PASS git hooks installed"
@@ -205,7 +205,7 @@ mv "$WORK/wt-commit-msg.bak" "$WT/.githooks/commit-msg"
 # Git skips a hook that is not executable, so a commit-msg without the bit is not installed.
 chmod -x "$WT/.githooks/commit-msg"
 g config core.hooksPath .githooks; verify
-has "a commit-msg that is not executable fails" ".githooks has no executable commit-msg"
+has "a commit-msg that is not executable fails" "$(cd "$WT" && pwd -P)/.githooks has no executable commit-msg"
 [ "$RC" -ne 0 ] && ok "...and the health check exits non-zero" || bad "non-executable commit-msg exit $RC"
 chmod +x "$WT/.githooks/commit-msg"
 
