@@ -175,12 +175,28 @@ fi
 #
 # .githooks/ (pre-commit, commit-msg) runs only once core.hooksPath points at it, and
 # nothing else notices when it does not: commits then skip gitleaks and the attribution
-# check.
+# check. Git resolves a relative value against each checkout, so `.githooks` means this
+# worktree's copy; an absolute value must name the primary checkout's .githooks, compared
+# physically (macOS reports /var as /private/var). The fix needs the user: the gates refuse
+# an agent's core.hooksPath write, since a rewritten value could switch the hooks off.
 HOOKS_PATH="$(git config core.hooksPath 2>/dev/null)"
+HOOKS_FIX="run ! git config core.hooksPath .githooks (the gates refuse this write from an agent)"
+HOOKS_DIR=""
 if [[ "$HOOKS_PATH" == ".githooks" ]]; then
-    check_pass "git hooks installed (core.hooksPath=.githooks)"
+    HOOKS_DIR="$WORKTREE_DIR/.githooks"
+elif [[ "$HOOKS_PATH" == /* ]] && PRIMARY_ROOT="$(main_repo_root)"; then
+    WANT="$(cd "$PRIMARY_ROOT/.githooks" 2>/dev/null && pwd -P)"
+    GOT="$(cd "$HOOKS_PATH" 2>/dev/null && pwd -P)"
+    if [[ "$GOT" == "$WANT" ]]; then
+        HOOKS_DIR="$WANT" # empty, so still a failure, when neither directory exists
+    fi
+fi
+if [[ -z "$HOOKS_DIR" ]]; then
+    check_fail "git hooks not installed (core.hooksPath is '${HOOKS_PATH}', not .githooks or the primary checkout's .githooks): ${HOOKS_FIX}"
+elif [[ ! -x "$HOOKS_DIR/commit-msg" ]]; then
+    check_fail "git hooks not installed (${HOOKS_DIR} has no executable commit-msg): ${HOOKS_FIX}"
 else
-    check_fail "git hooks not installed (core.hooksPath is '${HOOKS_PATH}', not .githooks): run git config core.hooksPath .githooks once per clone"
+    check_pass "git hooks installed (core.hooksPath=${HOOKS_PATH})"
 fi
 
 # -- Summary --
