@@ -65,27 +65,38 @@ branch name, the reviewed SHA, its lens, the Phase 2 change sets and the exact a
 writes, `<checkout root>/.claude/markers/attest/<reviewed SHA>/<lens>.md`, with both values
 written in literally:
 
-| Subagent type       | Lens       | Extra prompt content                                                                     |
-| ------------------- | ---------- | ---------------------------------------------------------------------------------------- |
-| `code-review-agent` | `code`     | none                                                                                     |
-| `code-review-agent` | `docs`     | none                                                                                     |
-| `code-review-agent` | `tests`    | none                                                                                     |
-| `code-review-agent` | `intent`   | the Phase 1 requirement list verbatim, out-of-scope items marked                         |
-| `code-review-agent` | `ac`       | the issue number only; it fetches the AC section itself, so a stale list cannot reach it |
-| `security-reviewer` | `security` | the attestation instructions below                                                       |
-| `crypto-reviewer`   | `crypto`   | the attestation instructions below                                                       |
+| Subagent type       | Lens       | Extra prompt content                                                                        |
+| ------------------- | ---------- | ------------------------------------------------------------------------------------------- |
+| `code-review-agent` | `code`     | none                                                                                        |
+| `code-review-agent` | `docs`     | none                                                                                        |
+| `code-review-agent` | `tests`    | none                                                                                        |
+| `code-review-agent` | `intent`   | the Phase 1 requirement list verbatim, out-of-scope items marked, and the draft paths below |
+| `code-review-agent` | `ac`       | the issue number only; it fetches the AC section itself, so a stale list cannot reach it    |
+| `security-reviewer` | `security` | the attestation instructions below                                                          |
+| `crypto-reviewer`   | `crypto`   | the attestation instructions below                                                          |
+
+Lens `intent` also gets the paths of the draft PR body and Moment 3 steps when the caller has
+written them, as claims to check.
 
 `security-reviewer` and `crypto-reviewer` are Tessera's own agents and know nothing about
 attestations, so their prompts add: "Also write the attestation file at <path>, one row per `## `
 and `### ` heading of every file `.claude/review-lenses.tsv` maps to your lens, in the format
 `.claude/agents/code-review-agent.md` → 'Attestation' gives, and run
-`bash scripts/lib/review-attestation.sh check`." That file is the one write both agents' read-only
-rule allows. `crypto-reviewer` runs on every branch: when the diff touches none of `crypto.md`'s
-paths and nothing about keys, signatures, sync payloads or what the server sees, it attests each
+`bash scripts/lib/review-attestation.sh check`. Run any test in a `git archive` copy of the
+reviewed commit under `mktemp -d`, and report `git status --porcelain` before and after your run."
+That file is the one write both agents' read-only rule allows. `crypto-reviewer` runs on every
+branch: when the diff touches none of `crypto.md`'s paths and nothing about keys, signatures, sync payloads or what the server sees, it attests each
 heading `N/A` with that reason, which takes a minute.
 
 The lenses and the rule files each attests live in `.claude/review-lenses.tsv`; add a lens there,
 never in this table alone.
+
+**One checkout, seven lenses.** They run at once in the same tree, so one lens's mutant is another
+lens's code under test, and a false RED or GREEN follows. Only lens `tests` runs
+`scripts/mutate.sh` in the shared checkout (it restores the file). Any other lens that mutates or
+runs tests does so in a copy of the reviewed commit, extracted with
+`git archive <reviewed SHA> | tar -x -C <a mktemp -d directory>`; a copy of the working tree may
+hold the tests lens's live mutant. Every lens reports `git status --porcelain` before and after its run.
 
 **Repeat rounds.** A caller's first `/code-review` on a branch covers the whole diff. A caller is a
 checkout: `bash scripts/lib/review-attestation.sh prior` prints `PRIOR_SHA`, the nearest commit at
@@ -115,7 +126,9 @@ it: `<git common dir>/review-decisions/<n>.md` while that file exists
 otherwise the `Operator decisions and rejected findings` section of the worker's evidence comment
 on the PR (`gh pr view <branch> --repo Vainnor/tessera --comments`). An entry names a class, not a
 line: the rule, the module or function, the defect in one line, the operator's answer quoted, and
-the date. It covers every instance of that class on the branch. Write a decision there the moment
+the date. It covers every instance of that class on the branch. The record becomes part of a
+public PR comment, so an entry for a finding sent to private reporting names no mechanism: only
+"security, routed to private reporting", the answer and the date. Write a decision there the moment
 the operator makes it. **Your own call is not a decision**: an equivalent mutant, a nit-pick, a
 finding Phase 4 disproved, a pre-existing line. Put it to the operator with your recommendation,
 or every lens raises it again. A lens reports a finding the record covers as DISMISSED, which

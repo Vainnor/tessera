@@ -19,10 +19,25 @@
 
 - The name states the behavior: `rejects_parent_traversal`, not `test_path_3`.
 - Assert the exact value, not a weaker proxy (`matches!(e, Error::InvalidPath { .. })` over
-  `is_err()`).
+  `is_err()`). A message that names a path is asserted with the full resolved path
+  (`$(cd "$X" && pwd -P)/...`), not its last component, which a wrong directory also ends with.
+- Every user-visible message the diff adds or rewords gets an assertion, summary lines included,
+  and so does each value of an interpolated reason, not only the new one.
 - No network, no real home folder, no clock: inject paths and time. Fixtures are synthetic.
+- A test of path resolution builds its own symlink (`ln -s`) in the fixture. macOS's `$TMPDIR`
+  sits behind `/var` → `/private/var` and Linux's does not, so a test leaning on it proves the
+  behavior on one host only. Re-run its mutant with `TMPDIR="$(cd "$TMPDIR" && pwd -P)"`.
+- Code that branches on a host tool (`timeout(1)`): the tests of the capable branch run only
+  where the tool exists and print a `SKIP` line naming what did not run; one case always runs the
+  other branch with a `PATH` built without the tool.
+- A stub proves a timeout only for programs that die on the stub's signal. Go ignores `SIGALRM`,
+  so perl's `alarm` never stops `gh`; a timeout test's stub ignores the signal the real program
+  ignores (`trap '' ALRM`).
 - **A guard test is proven once by breaking the guard and watching the test fail**, before you
-  trust it. Mention it in the PR.
+  trust it. Mention it in the PR. Run the mutation before recording a guard as untestable: an
+  existing assertion may already kill it.
+- A test that needs `unsafe`, a new harness or a dependency is the user's decision. An ordering
+  only memory can observe ("checked before it allocates") is structural; say so in the PR.
 
 ## Reading results
 

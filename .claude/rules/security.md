@@ -31,7 +31,8 @@ primitives from reviewed crates, all of it in `tessera-core`, fail closed.
 ## Secrets and supply chain
 
 - Never commit a key, token, `.env`, signing material or real note content. The pre-commit hook
-  and CI run gitleaks; never bypass them (`--no-verify`).
+  and CI run gitleaks; never bypass them (`--no-verify`). A check that a git hook is active tests
+  `-x` on the file git will run: git skips a hook without the execute bit.
 - Dependencies follow `dependencies.md`.
 - GitHub Actions are pinned by commit SHA with the tag in a comment, and every workflow starts
   from `permissions: {}`.
