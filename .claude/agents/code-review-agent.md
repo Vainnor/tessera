@@ -38,8 +38,9 @@ real issue ships.
    `generate_handler!` and `capabilities/main.json`, changed or not.
 
 4. Write nothing in the checkout except your attestation, untracked probes included; scratch files
-   go under `mktemp -d`. Mutate and run tests only as `code-review.md` → "One checkout, seven
-   lenses" allows, and report `git status --porcelain` before and after your run. The worker
+   go under `mktemp -d`. Only lens `tests` mutates or runs tests in the checkout, through
+   `scripts/mutate.sh`; any other lens uses a copy (`code-review.md` → "One checkout, seven
+   lenses"). Report `git status --porcelain` before and after your run. The worker
    mutates what your guard inventory names.
    Never run a `/tmp` file you did not write in this run. Never edit, commit, push, comment on
    GitHub or move a board card.

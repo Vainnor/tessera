@@ -82,9 +82,9 @@ written them, as claims to check.
 attestations, so their prompts add: "Also write the attestation file at <path>, one row per `## `
 and `### ` heading of every file `.claude/review-lenses.tsv` maps to your lens, in the format
 `.claude/agents/code-review-agent.md` → 'Attestation' gives, and run
-`bash scripts/lib/review-attestation.sh check`. Report `git status --porcelain` before and after
-your run." That file is the one write both agents' read-only
-rule allows. `crypto-reviewer` runs on every branch: when the diff touches none of `crypto.md`'s
+`bash scripts/lib/review-attestation.sh check`. Run any test in a copy of the tree under
+`mktemp -d`, and report `git status --porcelain` before and after your run." That file is the one
+write both agents' read-only rule allows. `crypto-reviewer` runs on every branch: when the diff touches none of `crypto.md`'s
 paths and nothing about keys, signatures, sync payloads or what the server sees, it attests each
 heading `N/A` with that reason, which takes a minute.
 

@@ -35,8 +35,10 @@ verbatim. For a `/code-review` lens, check the prompt carries only what `code-re
 attestation path, `PRIOR_SHA` on a repeat round, the decisions-record location, for `intent` the
 requirement list and the paths of the draft PR body and Moment 3 steps, for `security` and
 `crypto` the attestation instructions) and strip anything else: a summary of what was built, or
-an opinion on it. The same holds for the pre-commit `crypto-reviewer` review: its prompt carries
-the base, the SHA and the issue number. The builder must not brief its own reviewers.
+an opinion on it. The same holds for the pre-commit `crypto-reviewer` review, whose change is not
+committed yet: its prompt carries the base, the absolute worktree path, the issue number and the
+instruction to review the uncommitted diff there (`git diff <base>` plus untracked files). The
+builder must not brief its own reviewers.
 
 The loop lifts `CLAUDE.md`'s "ask before pushing or opening a PR" for the issue branches its
 worker and reviewer push, because the operator picked the issue and approves the plan and the
