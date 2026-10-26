@@ -272,11 +272,16 @@ whose setup did not exit 0.
 - **Inside a worktree session the harness confines git and edits to that worktree.** It refuses
   `git -C` into another checkout, git nested in `$(...)` or `<(...)`, and Edit or Write to a
   primary-checkout path. Run git as plain commands with values written in literally, and put
-  multi-step git logic in a script under `scripts/`, invoked as `bash <path>`.
+  multi-step git logic in a script under `scripts/`, invoked as `bash <path>`. The gates parse
+  quoted arguments too: a probe or mutation whose text names a refused command goes in a file
+  (built by Python string concatenation), not on the line, and ANSI-C `$'...'` quoting stays off
+  any line that runs `git commit`.
 - **A worktree runs its own copy of `.claude/rules/` and `.claude/commands/`, but the primary
   checkout's copy of the hooks** (`.claude/settings.json` resolves them through
-  `--git-common-dir`). A branch cut before a rule landed keeps following the old rule. When a rule
-  change governs what gets posted, pushed or moved, bring `origin/main` into the open worktrees.
+  `--git-common-dir`) **and of `.claude/agents/`**: a branch that changes an agent definition is
+  reviewed by the old one. A branch cut before a rule landed keeps following the old rule. When a
+  rule change governs what gets posted, pushed or moved, bring `origin/main` into the open
+  worktrees.
 - **Rebase onto `origin/main` only before the first push; once a branch is pushed, merge
   `origin/main` into it.** A rebase of a pushed branch needs a force-push and rewrites what a
   reviewer already read.

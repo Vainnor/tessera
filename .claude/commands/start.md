@@ -147,7 +147,8 @@ worktree's branch comes with it. The primary checkout stays on `main` and is nev
    Send its output to a scratchpad file and read it afterwards. It installs `node_modules` from
    the lockfile, builds `apps/desktop/dist` (the desktop crate embeds it) and ends by running
    `scripts/verify-worktree.sh`. Git hooks are per clone (`core.hooksPath=.githooks`); if verify
-   reports them missing, run `git config core.hooksPath .githooks` once in the primary checkout.
+   reports them missing, the user runs `! git config core.hooksPath .githooks` once in the primary
+   checkout. The gates refuse that write from an agent, so stop and ask.
 
 5. **Gate on the result.** Setup must exit 0 and its verify must pass. Anything else means the
    worktree is not usable: read the output, fix the cause, re-run sub-step 4 (it is idempotent),
@@ -184,6 +185,10 @@ Research first. Dispatch `codebase-researcher`, fresh, with the confirmed ACs, a
 `tessera-core` → disk, or route → handler on the server), the sibling pattern to copy, and every
 other caller of what it changes. Wait for it, and act on its first report. A report that
 contradicts the issue is a question for the user.
+
+When the work sets a size, memory or time bound, measure before offering options: a scratch crate
+in your scratchpad with a path dependency on the worktree's crate, run against the honest shapes
+and the attack shape, turns "lower the cap or use a ratio" into numbers the user can pick between.
 
 Enter plan mode and present the plan against the consolidated requirements from Step 1. Fold in
 any feedback the user mentioned. Name:

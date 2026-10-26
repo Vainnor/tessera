@@ -34,7 +34,7 @@ Review agents are never yours to start, Agent tool or not: every `/code-review` 
 `security-reviewer` and `crypto-reviewer` included), `/review-before-shipping`'s
 `pre-commit-checklist`, and the `crypto-reviewer` review a crypto or sync change needs before any
 commit (`crypto.md` → "Review"). Return `STATUS: needs-dispatch` with a `DISPATCH` block naming
-each agent and the exact prompt, so the orchestrator checks the prompts, runs them fresh and in
+each agent and the exact prompt, so the orchestrator checks the lens prompts, runs them fresh and in
 parallel, and sends you their reports verbatim. Without the Agent tool, the three research
 agents above go out the same way.
 
@@ -148,17 +148,18 @@ records 2 to 5 from them. Keep each record in your output:
    from the worktree), and each probe in `ticket-reviewer.md` → "Probes". An AC saying "every"
    covers every instance in its scope, not only lines you added. Walk them again before `/ship`,
    and check lens `ac`'s rows: every one `Checked`.
-2. **Mutation table.** Every row of the guard inventory, plus any guard added since: removed in
-   turn, each comparison flipped (`<` to `<=`), each with its `scripts/mutate.sh` invocation, red
-   or green. Choosing your own subset is how returns happen.
+2. **Mutation table.** Every row of the guard inventory, plus any guard added since and each
+   message line the diff adds or changes (summary lines, each value of an interpolated reason):
+   removed in turn, each comparison flipped (`<` to `<=`), each with its `scripts/mutate.sh`
+   invocation, red or green. Choosing your own subset is how returns happen.
 3. **Untouched paths.** Every row of the untouched-path table, plus what `tdd-planner.md` →
    "Step 1: Extract testable requirements" lists as already reaching the changed code: one
    scenario each, the branch against `origin/main`. A core API change reaches the desktop shell
    and the server; each is its own path.
-4. **Claims.** Draft the PR body and the Moment 3 steps before the last `/code-review` and give
-   them to lens `intent` with the requirement list. Every comment, doc line, commit message and PR
-   sentence the branch adds is checked against the code or the dependency's source, each with the
-   `file:line` that proves it. A claim of absence ("nothing reads it") cites the search.
+4. **Claims.** Draft the PR body and the Moment 3 steps to files before the last `/code-review`
+   and give lens `intent` their paths with the requirement list (`code-review.md` → "Phase 3").
+   Every comment, doc line, commit message and PR sentence the branch adds is checked against the
+   code or the dependency's source, each with the `file:line` that proves it. A claim of absence ("nothing reads it") cites the search.
 5. **Operator decisions and rejected findings.** One record per issue, kept from the first round in
    the form `code-review.md` → "Operator decisions" gives: every finding the operator rejected and
    every decision that changed what was built, by class, each quoting the operator's relayed
@@ -166,7 +167,9 @@ records 2 to 5 from them. Keep each record in your output:
    `<git common dir>/review-decisions/<n>.md` until the PR exists; at `/ship` it becomes this
    section of the evidence comment and the file is deleted. Only the operator rejects. Before
    `/ship`, every entry without a quoted answer, and every finding, green mutation or unproven
-   claim you will not fix, goes to them in one `OPERATOR_QUESTIONS` batch.
+   claim you will not fix, goes to them in one `OPERATOR_QUESTIONS` batch. The record goes public
+   in the evidence comment, so an entry for a finding sent to private reporting reads only
+   "security, routed to private reporting", the quoted answer and the date.
 
 Fix what they show under "Findings outside the plan" below. Every fix sweeps its mechanism: grep
 code, docs, tests and the AC text with the loosest pattern that finds it, read every hit, and fix

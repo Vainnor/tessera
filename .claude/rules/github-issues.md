@@ -63,10 +63,13 @@ not a message printed above it:
 
 ```bash
 LIMIT=1200   # the row's budget
-python3 -c 'import sys; n = len(open(sys.argv[1]).read().rstrip()); print(n); sys.exit(n > int(sys.argv[2]))' body.md "$LIMIT" \
-  && ! grep -qiE 'Drafted by|Generated with|Co-Authored' body.md \
-  && gh issue comment <n> --repo Vainnor/tessera --body-file body.md
+python3 -c 'import sys; n = len(open(sys.argv[1]).read().rstrip()); print(n); sys.exit(n > int(sys.argv[2]))' <scratchpad>/body.md "$LIMIT" \
+  && ! grep -qiE 'Drafted by|Generated with|Co-Authored' <scratchpad>/body.md \
+  && gh issue comment <n> --repo Vainnor/tessera --body-file <scratchpad>/body.md
 ```
+
+Give the body file an absolute path: the attribution gate refuses a relative `--body-file` on a
+line that changes directory.
 
 Draft to about 1,000 characters to leave room. If you are over, the fix is never to compress prose
 into denser prose: move material into the PR. What survives a trim, in order: the check steps

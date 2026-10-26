@@ -33,9 +33,9 @@ fresh subagent, in parallel in one message, and SendMessage the reports back to 
 verbatim. For a `/code-review` lens, check the prompt carries only what `code-review.md` → "Phase
 3: Lens reviews and attestation" lists for that lens (branch, reviewed SHA, lens, change sets,
 attestation path, `PRIOR_SHA` on a repeat round, the decisions-record location, for `intent` the
-requirement list, for `security` and `crypto` the attestation instructions) and strip anything
-else: a summary of what was built, or an opinion on it. The builder must not brief its own
-reviewers.
+requirement list and the paths of the draft PR body and Moment 3 steps, for `security` and
+`crypto` the attestation instructions) and strip anything else: a summary of what was built, a
+focus hint, or an opinion on it. The builder must not brief its own reviewers.
 
 The loop lifts `CLAUDE.md`'s "ask before pushing or opening a PR" for the issue branches its
 worker and reviewer push, because the operator picked the issue and approves the plan and the

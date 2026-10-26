@@ -38,7 +38,10 @@ real issue ships.
    `generate_handler!` and `capabilities/main.json`, changed or not.
 
 4. Write nothing in the checkout except your attestation, untracked probes included; scratch files
-   go under `mktemp -d`. Never mutate code: the worker mutates what your guard inventory names.
+   go under `mktemp -d`. Never mutate code in the checkout, except lens `tests`, which may run
+   `scripts/mutate.sh` (it restores the file) to prove a guard-inventory row; another lens mutates
+   a copy of the tree under `mktemp -d`. The worker mutates what your guard inventory names.
+   Report `git status --porcelain` before and after your run.
    Never run a `/tmp` file you did not write in this run. Never edit, commit, push, comment on
    GitHub or move a board card.
 
@@ -187,6 +190,10 @@ Also flag, MAJOR when you can state the failure scenario, MINOR otherwise:
 - A test outside its place: Rust tests beside the code or in `crates/core/tests/`, vitest beside
   the code.
 
+When the only test that could kill a row needs `unsafe` (a counting `GlobalAlloc`), a new harness
+or a dependency, say what a test can and cannot observe and mark the fix an operator decision
+rather than asking for a proxy test (`testing.md` → "How tests are written").
+
 ## Lens: intent
 
 Owns no file. The requirement list is in your prompt: the issue body's `## Acceptance criteria`
@@ -201,6 +208,9 @@ format or dependency> | … |` row each.** The evidence is the AC it serves. Non
   non-obvious reason for the code as it is now; no history, no issue stories). A false claim a
   reader would act on wrongly for security, data or a public API is MAJOR; any other false claim,
   an issue number or narration is MINOR.
+- **One `| Claim | <draft file>: <sentence> | … |` row per factual sentence of the draft PR body
+  and Moment 3 steps**, when your prompt gives their paths. The evidence is the `file:line` that
+  proves it; graded as for comments.
 
 ## Lens: ac
 
