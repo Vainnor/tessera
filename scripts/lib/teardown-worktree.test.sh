@@ -6,8 +6,24 @@
 #   bash scripts/lib/teardown-worktree.test.sh
 #
 # Each case builds a scratch repository with a bare "origin" and one linked
-# worktree at .claude/worktrees/<NAME> (EnterWorktree's layout). Exits non-zero on
-# any failure.
+# worktree at .claude/worktrees/<NAME> (EnterWorktree's layout). A stub gh is first
+# on PATH throughout, so no case reaches GitHub: it fails with no output unless a
+# case sets GH_PRS, which it prints (after sleeping GH_SLEEP seconds, and exiting
+# GH_EXIT, when set). Like the real gh, it ignores SIGALRM. Exits non-zero on any
+# failure.
+#
+# Coverage matrix (Vainnor/tessera#25)
+#
+# Requirement                              | Case                         | Guard it kills
+# -----------------------------------------|------------------------------|-----------------------------
+# AC1 merged PR at the branch SHA deletes  | squash-merged                | the merged-PR check, its query
+# AC2 branch past the PR head is kept      | squash-merged-ahead          | merged-PR SHA match
+#                                          | squash-merged-substring      | the match is a whole line
+# AC3 a failing gh keeps the branch        | squash-merged-gh-fails       | fail-closed on gh errors
+# AC3 a slow gh keeps the branch           | squash-merged-gh-slow        | the 10 s timeout
+# AC1 no timeout(1): gh is never asked     | squash-merged-no-timeout     | the timeout(1) check
+# AC4 each case above, with the stubbed gh | (every AC1-AC3 case above)   | each guard above
+#     fails when its guard is removed      |                              |
 # ==============================================================================
 set -uo pipefail
 
@@ -22,6 +38,12 @@ trap cleanup EXIT
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR WORKTREE_TEARDOWN_FROM_HOOK
 export GIT_AUTHOR_NAME=T GIT_AUTHOR_EMAIL=t@e.com GIT_COMMITTER_NAME=T GIT_COMMITTER_EMAIL=t@e.com
 export GIT_CONFIG_NOSYSTEM=1 HOME="$WORK"
+unset GH_TOKEN GITHUB_TOKEN GH_CONFIG_DIR GH_PRS GH_SLEEP GH_EXIT
+
+mkdir -p "$WORK/bin"
+printf '#!/bin/bash\ntrap "" ALRM\necho "gh $*" >> "%s/gh.log"\n[[ -n "${GH_PRS:-}" ]] || exit 1\n[[ -z "${GH_SLEEP:-}" ]] || sleep "$GH_SLEEP"\nprintf "%%s\\n" "$GH_PRS"\nexit "${GH_EXIT:-0}"\n' "$WORK" > "$WORK/bin/gh"
+chmod +x "$WORK/bin/gh"
+export PATH="$WORK/bin:$PATH"
 
 PASS=0
 FAIL=0
@@ -47,6 +69,14 @@ setup() {
     printf 'x\n' > "$WT/file.txt" && git -C "$WT" add file.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm work
 }
 push_branch() { git -C "$WT" push -q origin "$BR"; }
+# squash_merge: origin's main gets a new commit (the squash), the remote branch is
+# deleted, and $MAIN fetches with --prune, as after GitHub squash-merges a PR.
+squash_merge() {
+    printf 'squash\n' > "$MAIN/squash.txt" && git -C "$MAIN" add squash.txt && git -C "$MAIN" -c core.hooksPath=/dev/null commit -qm squash
+    git -C "$MAIN" push -q origin main
+    git -C "$MAIN" push -q origin --delete "$BR"
+    git -C "$MAIN" fetch -q --prune origin
+}
 
 # teardown [ARGS...]: from $MAIN unless CWD is set; sets OUT (colors stripped) and RC.
 teardown() {
@@ -61,9 +91,12 @@ removed()  { if [[ ! -d "$WT" ]] && ! branch_exists; then ok "$1"; else bad "$1 
 
 echo "== removes a clean, pushed worktree =="
 setup pushed; push_branch
+rm -f "$WORK/gh.log"
 teardown "$NAME"
 [[ $RC -eq 0 ]] && ok "exit 0" || bad "exit $RC: $OUT"
 removed "the worktree and its local branch are gone"
+has "...and says why" "Local branch $BR deleted (its commits are on origin)."
+[[ ! -e "$WORK/gh.log" ]] && ok "...without asking gh, since origin holds the branch" || bad "gh called: $(cat "$WORK/gh.log")"
 git -C "$MAIN/../origin.git" show-ref --verify --quiet "refs/heads/$BR" && ok "the remote branch is untouched" || bad "remote branch deleted"
 setup by-path; push_branch
 teardown "$WT"
@@ -81,10 +114,57 @@ setup unpushed
 teardown "$NAME"
 [[ $RC -eq 0 && ! -d "$WT" ]] && ok "the worktree goes (its commits stay on the branch)" || bad "unpushed: exit $RC, dir $([[ -d "$WT" ]] && echo left || echo gone)"
 branch_exists && ok "...and the local branch is kept" || bad "unpushed branch deleted"
-has "...and says why" "Local branch $BR kept: it has commits origin does not."
+has "...and says why" "Local branch $BR kept: neither origin nor a merged PR is known to hold its commits."
+has "...and the summary says so" "Local branch $BR kept — its commits are not known to be on origin"
 setup ahead; push_branch; printf 'w\n' > "$WT/more.txt" && git -C "$WT" add more.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm more
 teardown "$NAME"
 branch_exists && ok "a branch ahead of its pushed copy is kept" || bad "ahead branch deleted"
+
+echo "== a squash-merged branch whose remote branch is gone =="
+# These cases reach gh, which step 5b asks only where timeout(1) exists.
+if command -v timeout >/dev/null 2>&1; then
+    setup squash-merged; push_branch; squash_merge
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" teardown "$NAME"
+    removed "a merged PR whose head is the branch SHA deletes the branch"
+    has "...and says why" "Local branch $BR deleted (its merged PR's head is this commit)."
+    GH_CALL="gh pr list --repo Vainnor/tessera --head $BR --state merged --json headRefOid --jq .[].headRefOid"
+    [[ "$(tail -1 "$WORK/gh.log")" == "$GH_CALL" ]] && ok "...asking gh for this branch's merged PRs in this repository" || bad "gh call: $(tail -1 "$WORK/gh.log")"
+    setup squash-merged-substring; push_branch; squash_merge
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")0" teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a head SHA that only contains the branch SHA keeps the branch" || bad "substring match: $OUT"
+    setup squash-merged-ahead; push_branch; PR_HEAD="$(git -C "$WT" rev-parse HEAD)"
+    printf 'w\n' > "$WT/more.txt" && git -C "$WT" add more.txt && git -C "$WT" -c core.hooksPath=/dev/null commit -qm more
+    squash_merge
+    GH_PRS="$PR_HEAD" teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a branch with commits past the merged PR's head is kept" || bad "ahead of PR head: $OUT"
+    setup squash-merged-gh-fails; push_branch; squash_merge
+    # The stub prints the matching SHA and then fails: output from a failed gh is not trusted.
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_EXIT=1 teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a failing gh keeps the branch" || bad "gh fails: $OUT"
+    setup squash-merged-gh-slow; push_branch; squash_merge
+    # A real wait: the stub prints the matching SHA only after the fixed 10 s limit.
+    GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_SLEEP=15 teardown "$NAME"
+    [[ ! -d "$WT" ]] && branch_exists && ok "a gh slower than the time limit keeps the branch" || bad "gh slow: $OUT"
+else
+    echo "  SKIP: no timeout(1) on this host, so step 5b never asks gh; the gh cases did not run"
+fi
+# A PATH with every tool but timeout(1), so with_timeout would fall back to a
+# SIGALRM the stub ignores: without the check, gh would answer after 15 s.
+mkdir -p "$WORK/no-timeout"
+IFS=: read -ra PATH_DIRS <<< "$PATH"
+for dir in "${PATH_DIRS[@]}"; do
+    [[ "$dir" != "$WORK/bin" && -d "$dir" ]] || continue
+    for tool in "$dir"/*; do
+        name="${tool##*/}"
+        [[ "$name" == timeout || -e "$WORK/no-timeout/$name" || ! -x "$tool" || -d "$tool" ]] && continue
+        ln -s "$tool" "$WORK/no-timeout/$name"
+    done
+done
+setup squash-merged-no-timeout; push_branch; squash_merge
+rm -f "$WORK/gh.log"
+PATH="$WORK/bin:$WORK/no-timeout" GH_PRS="$(git -C "$MAIN" rev-parse "$BR")" GH_SLEEP=15 teardown "$NAME"
+[[ ! -d "$WT" ]] && branch_exists && ok "without timeout(1) the branch is kept" || bad "no timeout: $OUT"
+[[ ! -e "$WORK/gh.log" ]] && ok "...and gh is never asked" || bad "gh called without timeout(1): $(cat "$WORK/gh.log")"
 
 echo "== refuses =="
 setup dirty; push_branch; printf 'y\n' > "$WT/untracked.txt"

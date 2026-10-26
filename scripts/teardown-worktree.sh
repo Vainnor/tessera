@@ -3,8 +3,10 @@ set -e
 
 # Tear down a Tessera issue worktree.
 # Removes the worktree directory, and deletes the local branch when origin already
-# holds every commit on it. Refuses, before anything is removed, while anything in the
-# worktree is uncommitted, or when a detached HEAD holds commits no origin branch has.
+# holds every commit on it, or when a merged PR's head is the branch's commit
+# (asked of gh only where timeout(1) exists).
+# Refuses, before anything is removed, while anything in the worktree is
+# uncommitted, or when a detached HEAD holds commits no origin branch has.
 # The remote branch and any PR are never touched.
 #
 # Usage (from the main checkout):
@@ -244,30 +246,49 @@ fi
 # ---------------------------------------------------------------------------
 # 5b. Delete the local branch — only when every commit on it is on origin
 # ---------------------------------------------------------------------------
-# Safe only when origin holds the commits: the pushed branch at this SHA, or
-# origin/main already containing it. Asked of origin now for the
-# branch, not of refs/remotes/origin/*, which still matches after the remote branch
-# is deleted; an unreachable origin prints nothing, so the branch is kept. No
-# prompts and a time limit: the hook's output is hidden, so a credential prompt
-# would hang the session invisibly. A stale origin/main only makes the check stricter.
+# Safe only when origin holds the commits: the pushed branch at this SHA,
+# origin/main already containing it, or (below) a merged PR whose head is this
+# commit. The pushed branch is asked of origin now, not of refs/remotes/origin/*,
+# which still matches after the remote branch is deleted; an unreachable origin
+# prints nothing, so the branch is kept. No prompts and a time limit: the hook's
+# output is hidden, so a credential prompt would hang the session invisibly. A
+# stale origin/main only makes the check stricter.
+#
+# A squash merge satisfies neither origin check: GitHub deletes the remote branch
+# and main gets a new commit. So, failing both, ask GitHub (not origin) for the
+# head SHAs of the branch's merged PRs: GitHub keeps a merged PR's commits under
+# refs/pull/<n>/head. Only an exact match to the branch's commit counts, so a
+# branch with commits past the PR's head is kept. A gh that is missing, fails (its
+# output is then ignored) or runs past its time limit keeps the branch; the limit
+# is what stops a hidden hang. gh is asked only where timeout(1) exists: without it
+# with_timeout falls back to a SIGALRM, which gh, a Go program, ignores.
 BRANCH_RESULT=skipped
 if [ "$WORKTREE_REMOVED" = yes ] && [ -n "$BRANCH" ] \
     && git -C "$PROJECT_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH"; then
     REMOTE_SHA="$(GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -o BatchMode=yes' \
         with_timeout 20 git -C "$PROJECT_ROOT" ls-remote origin "refs/heads/$BRANCH" 2>/dev/null | awk '{ print $1 }' || true)"
+    ON_ORIGIN=""
     if [ "$REMOTE_SHA" = "$BRANCH_SHA" ] \
         || git -C "$PROJECT_ROOT" merge-base --is-ancestor "$BRANCH_SHA" origin/main 2>/dev/null; then
+        ON_ORIGIN="its commits are on origin"
+    elif command -v timeout >/dev/null 2>&1 \
+        && MERGED_HEADS="$(GH_PROMPT_DISABLED=1 with_timeout 10 gh pr list --repo Vainnor/tessera \
+            --head "$BRANCH" --state merged --json headRefOid --jq '.[].headRefOid' 2>/dev/null)" \
+        && printf '%s\n' "$MERGED_HEADS" | grep -qxF -- "$BRANCH_SHA"; then
+        ON_ORIGIN="its merged PR's head is this commit"
+    fi
+    if [ -n "$ON_ORIGIN" ]; then
         # Checked delete: only if the branch still points at the commit origin holds.
         if git -C "$PROJECT_ROOT" update-ref -d "refs/heads/$BRANCH" "$BRANCH_SHA" 2>/dev/null; then
             BRANCH_RESULT=deleted
-            echo -e "${GREEN}Local branch ${BRANCH} deleted (its commits are on origin).${NC}"
+            echo -e "${GREEN}Local branch ${BRANCH} deleted (${ON_ORIGIN}).${NC}"
         else
             BRANCH_RESULT=moved
             echo -e "${YELLOW}Local branch ${BRANCH} kept: it moved during teardown.${NC}"
         fi
     else
         BRANCH_RESULT=kept
-        echo -e "${YELLOW}Local branch ${BRANCH} kept: it has commits origin does not.${NC}"
+        echo -e "${YELLOW}Local branch ${BRANCH} kept: neither origin nor a merged PR is known to hold its commits.${NC}"
         echo -e "  Push it, or delete it deliberately: ${CYAN}git branch -D ${BRANCH}${NC}"
     fi
     echo ""
@@ -284,7 +305,7 @@ case "$WORKTREE_REMOVED" in
 esac
 case "$BRANCH_RESULT" in
     deleted) echo -e "  - Local branch ${CYAN}${BRANCH}${NC} deleted; the remote branch and any PR are untouched" ;;
-    kept)    echo -e "  - ${YELLOW}Local branch ${BRANCH} kept${NC} — unpushed commits" ;;
+    kept)    echo -e "  - ${YELLOW}Local branch ${BRANCH} kept${NC} — its commits are not known to be on origin" ;;
     moved)   echo -e "  - ${YELLOW}Local branch ${BRANCH} kept${NC} — it moved" ;;
 esac
 
