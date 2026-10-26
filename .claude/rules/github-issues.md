@@ -68,8 +68,8 @@ python3 -c 'import sys; n = len(open(sys.argv[1]).read().rstrip()); print(n); sy
   && gh issue comment <n> --repo Vainnor/tessera --body-file <scratchpad>/body.md
 ```
 
-Give the body file an absolute path: the attribution gate refuses a relative `--body-file` on a
-line that changes directory.
+Always give the body file an absolute path: the attribution gate refuses most relative
+`--body-file` paths on a line that changes directory.
 
 Draft to about 1,000 characters to leave room. If you are over, the fix is never to compress prose
 into denser prose: move material into the PR. What survives a trim, in order: the check steps

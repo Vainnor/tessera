@@ -82,7 +82,8 @@ written them, as claims to check.
 attestations, so their prompts add: "Also write the attestation file at <path>, one row per `## `
 and `### ` heading of every file `.claude/review-lenses.tsv` maps to your lens, in the format
 `.claude/agents/code-review-agent.md` → 'Attestation' gives, and run
-`bash scripts/lib/review-attestation.sh check`." That file is the one write both agents' read-only
+`bash scripts/lib/review-attestation.sh check`. Report `git status --porcelain` before and after
+your run." That file is the one write both agents' read-only
 rule allows. `crypto-reviewer` runs on every branch: when the diff touches none of `crypto.md`'s
 paths and nothing about keys, signatures, sync payloads or what the server sees, it attests each
 heading `N/A` with that reason, which takes a minute.
@@ -92,9 +93,9 @@ never in this table alone.
 
 **One checkout, seven lenses.** They run at once in the same tree, so one lens's mutant is another
 lens's code under test, and a false RED or GREEN follows. Only lens `tests` runs
-`scripts/mutate.sh` in the shared checkout; a lens that needs another mutation proof copies the
-tree to its scratchpad or names the mutation in its report. Every lens reports
-`git status --porcelain` before and after its run.
+`scripts/mutate.sh` in the shared checkout (it restores the file). Any other lens that mutates or
+runs tests does so in a copy of the tree under `mktemp -d`, or names the mutation in its report.
+Every lens reports `git status --porcelain` before and after its run.
 
 **Repeat rounds.** A caller's first `/code-review` on a branch covers the whole diff. A caller is a
 checkout: `bash scripts/lib/review-attestation.sh prior` prints `PRIOR_SHA`, the nearest commit at

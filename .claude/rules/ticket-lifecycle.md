@@ -273,8 +273,9 @@ whose setup did not exit 0.
   `git -C` into another checkout, git nested in `$(...)` or `<(...)`, and Edit or Write to a
   primary-checkout path. Run git as plain commands with values written in literally, and put
   multi-step git logic in a script under `scripts/`, invoked as `bash <path>`. The gates parse
-  quoted arguments too: a probe or mutation whose text names a refused command goes in a file
-  (built by Python string concatenation), not on the line, and ANSI-C `$'...'` quoting stays off
+  quoted arguments too: when a probe's input or a mutation's text merely names a refused command,
+  put that text in a data file (built by Python string concatenation) that the probe reads and
+  never runs. A refused command is never run this way. ANSI-C `$'...'` quoting stays off
   any line that runs `git commit`.
 - **A worktree runs its own copy of `.claude/rules/` and `.claude/commands/`, but the primary
   checkout's copy of the hooks** (`.claude/settings.json` resolves them through

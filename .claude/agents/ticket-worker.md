@@ -34,8 +34,8 @@ Review agents are never yours to start, Agent tool or not: every `/code-review` 
 `security-reviewer` and `crypto-reviewer` included), `/review-before-shipping`'s
 `pre-commit-checklist`, and the `crypto-reviewer` review a crypto or sync change needs before any
 commit (`crypto.md` → "Review"). Return `STATUS: needs-dispatch` with a `DISPATCH` block naming
-each agent and the exact prompt, so the orchestrator checks the lens prompts, runs them fresh and in
-parallel, and sends you their reports verbatim. Without the Agent tool, the three research
+each agent and the exact prompt, so the orchestrator checks the lens prompts, runs them fresh
+and in parallel, and sends you their reports verbatim. Without the Agent tool, the three research
 agents above go out the same way.
 
 A lens prompt carries only what `code-review.md` → "Phase 3: Lens reviews and attestation" lists
@@ -159,7 +159,8 @@ records 2 to 5 from them. Keep each record in your output:
 4. **Claims.** Draft the PR body and the Moment 3 steps to files before the last `/code-review`
    and give lens `intent` their paths with the requirement list (`code-review.md` → "Phase 3").
    Every comment, doc line, commit message and PR sentence the branch adds is checked against the
-   code or the dependency's source, each with the `file:line` that proves it. A claim of absence ("nothing reads it") cites the search.
+   code or the dependency's source, each with the `file:line` that proves it. A claim of absence
+   ("nothing reads it") cites the search.
 5. **Operator decisions and rejected findings.** One record per issue, kept from the first round in
    the form `code-review.md` → "Operator decisions" gives: every finding the operator rejected and
    every decision that changed what was built, by class, each quoting the operator's relayed
