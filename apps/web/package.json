@@ -15,10 +15,10 @@
   "dependencies": {
     "@vainnor/tessera-theme": "workspace:*",
     "@vainnor/tessera-ui": "workspace:*",
-    "astro": "^7.4.0"
+    "astro": "^7.4.2"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
+    "@astrojs/check": "^0.9.12",
     "@types/node": "^24.19.2",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
