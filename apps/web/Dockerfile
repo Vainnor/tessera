@@ -4,7 +4,7 @@
 
 # The output is static files, so the build stage runs natively and only the runtime stage is
 # per-platform.
-FROM --platform=$BUILDPLATFORM node:24.22.0-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS build
+FROM --platform=$BUILDPLATFORM node:24.22.2-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS build
 WORKDIR /src
 # corepack installs the pnpm version pinned in package.json's packageManager.
 RUN corepack enable
