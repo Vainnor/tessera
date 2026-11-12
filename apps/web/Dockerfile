@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile --filter "@vainnor/tessera-web..." \
 
 # The upstream binary carries cap_net_bind_service for ports below 1024, which makes exec fail
 # under no-new-privileges. Port 8080 needs no capability, so take a copy without the attribute.
-FROM caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f AS caddy
+FROM caddy:2.11.7-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5 AS caddy
 RUN cp /usr/bin/caddy /caddy
 
 # The same Alpine release the Caddy image is built on; keeps busybox wget for the healthcheck.
